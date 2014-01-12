@@ -19,12 +19,12 @@ func (r *RubyRunner) Run () {
       c := <- r.runCh
 
       ioutil.WriteFile("/tmp/1.rb", []byte(c.Command()), 755)
+      exec.Command("docker", "rm", "ruby").Run()
 
-      out, err := exec.Command("docker", "run -v /tmp:/tmp/host -name=\"ruby\" fd61e37b54de bash -l -c \"ruby /tmp/host/1.rb\"").Output()
-      if err != nil { log.Println(err) }
+      out, err := exec.Command("docker", "run", "-v", "/tmp:/tmp/host", "-name=ruby", "fd61e37b54de", "/bin/bash", "-l", "-c", "ruby /tmp/host/1.rb").CombinedOutput()
 
+      log.Println("OUT: ", string(out), " Error:", err)
       c.Response(string(out))
-      exec.Command("docker", "rm ruby")
     }
 
   }()
