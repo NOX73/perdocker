@@ -1,6 +1,7 @@
 package perd
 
 import "net/http"
+import "io/ioutil"
 
 type Server interface {
   Run()
@@ -27,8 +28,12 @@ func (s *server) Run () {
 
 func (s *server) rootHandler ( w http.ResponseWriter, r *http.Request ) {
 
-  res := s.rubyRunner.Eval("puts 'Hello World'")
-  w.Write(res.Bytes())
+  body, err := ioutil.ReadAll(r.Body);
+
+  if err == nil {
+    res := s.rubyRunner.Eval(string(body))
+    w.Write(res.Bytes())
+  }
 
 }
 
