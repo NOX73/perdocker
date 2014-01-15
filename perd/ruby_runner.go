@@ -57,6 +57,12 @@ func (r *RubyRunner) RunWorker () {
   }()
 }
 
+func (r *RubyRunner) RunWorkers (count int) {
+  for i := count; i>0; i-- {
+    r.RunWorker()
+  }
+}
+
 func (r *RubyRunner) Eval (command string) Result {
   respCh := make(chan Result)
   r.runCh <- NewCommand(command, respCh)

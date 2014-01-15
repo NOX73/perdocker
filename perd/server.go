@@ -12,9 +12,9 @@ type config struct {
   port string
 }
 
-func NewServer (port string) Server {
+func NewServer (port string, workers map[string]int) Server {
   ruby := NewRubyRunner()
-  ruby.RunWorker()
+  ruby.RunWorkers(workers["ruby"])
 
   return &server{ &config{port} ,ruby }
 }
