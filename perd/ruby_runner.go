@@ -43,6 +43,7 @@ func (r *RubyRunner) RunWorker () {
       var stdOut, stdErr bytes.Buffer
       cmd.Stdout, cmd.Stderr = &stdOut, &stdErr
 
+      cmd.Start()
       err := cmd.Wait()
 
       if err != nil { log.Println("Error:", err) }
