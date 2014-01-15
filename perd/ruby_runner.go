@@ -4,6 +4,7 @@ import "os/exec"
 import "log"
 import "io/ioutil"
 import "strconv"
+import "bytes"
 
 const (
   path = "/tmp/ruby/"
@@ -37,10 +38,15 @@ func (r *RubyRunner) RunWorker () {
       ioutil.WriteFile(filePath, []byte(c.Command()), 755)
       exec.Command("docker", "rm", wName).Run()
 
-      out, err := exec.Command("docker", "run", "-v", sharePath, "-name=" + wName, image, "/bin/bash", "-l", "-c", "ruby " + filePath).CombinedOutput()
+      cmd := exec.Command("docker", "run", "-v", sharePath, "-name=" + wName, image, "/bin/bash", "-l", "-c", "ruby " + filePath)
+
+      var stdOut, stdErr bytes.Buffer
+      cmd.Stdout, cmd.Stderr = &stdOut, &stdErr
+
+      err := cmd.Wait()
 
       if err != nil { log.Println("Error:", err) }
-      c.Response(out, []byte{}, 0)
+      c.Response(stdOut.Bytes(), stdErr.Bytes(), 0)
     }
 
   }()
