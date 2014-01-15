@@ -4,15 +4,17 @@ import "./perd"
 import "sync"
 import "flag"
 
+var httpPort string
+
 func main () {
 
-  var port = flag.String("port", "8080", "HTTP server port.")
-
+  flag.StringVar(&httpPort, "port", "8080", "HTTP server port.")
+  flag.Parse()
 
   var w sync.WaitGroup
   w.Add(1)
 
-  server := perd.NewServer(*port)
+  server := perd.NewServer(httpPort)
 
   go func(){
     server.Run()
