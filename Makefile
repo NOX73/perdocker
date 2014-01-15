@@ -9,4 +9,4 @@ images_pull_ruby:
 	docker pull perdocker/ruby
 
 run:
-	go run main.go
+	go run main.go --port 8080
