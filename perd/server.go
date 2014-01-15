@@ -29,7 +29,7 @@ func (s *server) Run () {
 
   http.HandleFunc("/ruby", s.rubyHandler)
 
-  log.Println("Listen http on" + s.config.port)
+  log.Println("Listen http on", s.config.port)
   http.ListenAndServe(":" + s.config.port, nil)
 }
 
