@@ -14,6 +14,14 @@ Cooming soon:
 - javascript
 - golang
 
+## API
+
+```bash
+curl -POST -d "[1,2,3].each do |a| puts a*a; end;" 'http://localhost:8080/ruby'
+
+{"std_out":"1\n4\n9\n","std_err":"","code":0}
+```
+
 ## Install
 
 ```bash
