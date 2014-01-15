@@ -6,7 +6,7 @@ Evaluate code in differnet languages inside docker containers.
 ## Install
 
 ```bash
-make images_pull
+make install
 ```
 
 ## Run
