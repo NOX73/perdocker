@@ -2,6 +2,7 @@ package perd
 
 import "net/http"
 import "io/ioutil"
+import "log"
 
 type Server interface {
   Run()
@@ -28,7 +29,8 @@ func (s *server) Run () {
 
   http.HandleFunc("/ruby", s.rubyHandler)
 
-  http.ListenAndServe(":"+s.config.port, nil)
+  log.Println("Listen http on" + s.config.port)
+  http.ListenAndServe(":" + s.config.port, nil)
 }
 
 func (s *server) rubyHandler ( w http.ResponseWriter, r *http.Request ) {
