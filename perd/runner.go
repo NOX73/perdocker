@@ -1,6 +1,9 @@
 package perd
 
 type Runner interface {
-  Run()
-  Eval(string) Result 
+  RunWorker()
+  Eval(string) Result
 }
+
+type runner struct {}
+

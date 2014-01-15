@@ -4,8 +4,8 @@ type Result interface {
   Bytes() []byte
 }
 
-func NewResult(res string) Result {
-  return &result{res, "", 0}
+func NewResult(out, err string, code int) Result {
+  return &result{out, err, code}
 }
 
 type result struct {

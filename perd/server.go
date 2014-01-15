@@ -9,7 +9,7 @@ type Server interface {
 
 func NewServer () Server {
   ruby := NewRubyRunner()
-  ruby.Run()
+  ruby.RunWorker()
 
   return &server{ ruby }
 }

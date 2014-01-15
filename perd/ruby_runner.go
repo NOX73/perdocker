@@ -3,28 +3,44 @@ package perd
 import "os/exec"
 import "log"
 import "io/ioutil"
+import "strconv"
+
+const (
+  path = "/tmp/ruby/"
+  image = "perdocker/ruby"
+)
 
 type RubyRunner struct {
   runCh chan Command
+  *runner
 }
 
 func NewRubyRunner() Runner {
-  return &RubyRunner{make(chan Command)}
+  return &RubyRunner{make(chan Command), &runner{}}
 }
 
-func (r *RubyRunner) Run () {
+var workerId int64
+func (r *RubyRunner) RunWorker () {
+  workerId ++
+
+  wId := workerId
+  wName := "perdoker_ruby_" + strconv.FormatInt(wId, 10)
+  sharePath := path + ":" + path
+
   go func () {
 
     for {
       c := <- r.runCh
 
-      ioutil.WriteFile("/tmp/1.rb", []byte(c.Command()), 755)
-      exec.Command("docker", "rm", "ruby").Run()
+      filePath := path + uniqFileName() + ".rb"
 
-      out, err := exec.Command("docker", "run", "-v", "/tmp:/tmp/host", "-name=ruby", "fd61e37b54de", "/bin/bash", "-l", "-c", "ruby /tmp/host/1.rb").CombinedOutput()
+      ioutil.WriteFile(filePath, []byte(c.Command()), 755)
+      exec.Command("docker", "rm", wName).Run()
 
-      log.Println("OUT: ", string(out), " Error:", err)
-      c.Response(string(out))
+      out, err := exec.Command("docker", "run", "-v", sharePath, "-name=" + wName, image, "/bin/bash", "-l", "-c", "ruby " + filePath).CombinedOutput()
+
+      if err != nil { log.Println("Error:", err) }
+      c.Response(string(out), "", 0)
     }
 
   }()

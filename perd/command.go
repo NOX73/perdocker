@@ -1,7 +1,7 @@
 package perd
 
 type Command interface {
-  Response(string)
+  Response(string, string, int)
   Command()string
 }
 
@@ -14,8 +14,8 @@ type command struct {
   responseChannel chan Result
 }
 
-func (c *command) Response (r string) {
-  c.responseChannel <- NewResult(r)
+func (c *command) Response (out, err string, code int) {
+  c.responseChannel <- NewResult(out, err, code)
 }
 
 func (c *command) Command () string {
