@@ -5,6 +5,7 @@ import "log"
 import "io/ioutil"
 import "strconv"
 import "bytes"
+import "syscall"
 
 const (
   path = "/tmp/ruby/"
@@ -41,13 +42,16 @@ func (r *RubyRunner) RunWorker () {
       cmd := exec.Command("docker", "run", "-v", sharePath, "-name=" + wName, image, "/bin/bash", "-l", "-c", "ruby " + filePath)
 
       var stdOut, stdErr bytes.Buffer
+      var code int
       cmd.Stdout, cmd.Stderr = &stdOut, &stdErr
 
       cmd.Start()
       err := cmd.Wait()
 
+      code = cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
+
       if err != nil { log.Println("Error:", err) }
-      c.Response(stdOut.Bytes(), stdErr.Bytes(), 0)
+      c.Response(stdOut.Bytes(), stdErr.Bytes(), code)
     }
 
   }()
