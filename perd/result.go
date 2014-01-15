@@ -1,19 +1,22 @@
 package perd
 
+import "encoding/json"
+
 type Result interface {
   Bytes() []byte
 }
 
 func NewResult(out, err []byte, code int) Result {
-  return &result{out, err, code}
+  return &result{string(out), string(err), code}
 }
 
 type result struct {
-  stdOut      []byte
-  stdErr      []byte
+  stdOut      string
+  stdErr      string
   statusCode  int
 }
 
 func (r *result) Bytes () []byte {
-  return []byte(r.stdOut)
+  j, _ := json.Marshal(r)
+  return j
 }
