@@ -7,14 +7,19 @@ type Server interface {
   Run()
 }
 
-func NewServer () Server {
+type config struct {
+  port string
+}
+
+func NewServer (port string) Server {
   ruby := NewRubyRunner()
   ruby.RunWorker()
 
-  return &server{ ruby }
+  return &server{ &config{port} ,ruby }
 }
 
 type server struct {
+  config *config
   rubyRunner Runner
 }
 
@@ -23,7 +28,7 @@ func (s *server) Run () {
 
   http.HandleFunc("/ruby", s.rubyHandler)
 
-  http.ListenAndServe(":1111", nil)
+  http.ListenAndServe(":"+s.config.port, nil)
 }
 
 func (s *server) rubyHandler ( w http.ResponseWriter, r *http.Request ) {
