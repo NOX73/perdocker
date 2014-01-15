@@ -40,7 +40,7 @@ func (r *RubyRunner) RunWorker () {
       out, err := exec.Command("docker", "run", "-v", sharePath, "-name=" + wName, image, "/bin/bash", "-l", "-c", "ruby " + filePath).CombinedOutput()
 
       if err != nil { log.Println("Error:", err) }
-      c.Response(string(out), "", 0)
+      c.Response(out, []byte{}, 0)
     }
 
   }()

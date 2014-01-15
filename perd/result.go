@@ -4,13 +4,13 @@ type Result interface {
   Bytes() []byte
 }
 
-func NewResult(out, err string, code int) Result {
+func NewResult(out, err []byte, code int) Result {
   return &result{out, err, code}
 }
 
 type result struct {
-  stdOut      string
-  stdErr      string
+  stdOut      []byte
+  stdErr      []byte
   statusCode  int
 }
 

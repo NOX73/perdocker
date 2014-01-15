@@ -21,13 +21,12 @@ type server struct {
 func (s *server) Run () {
   // Root path
 
-  http.HandleFunc("/", s.rootHandler)
+  http.HandleFunc("/ruby", s.rubyHandler)
 
   http.ListenAndServe(":1111", nil)
 }
 
-func (s *server) rootHandler ( w http.ResponseWriter, r *http.Request ) {
-
+func (s *server) rubyHandler ( w http.ResponseWriter, r *http.Request ) {
   body, err := ioutil.ReadAll(r.Body);
 
   if err == nil {
