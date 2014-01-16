@@ -7,16 +7,22 @@ import (
   "bytes"
   "syscall"
   "log"
+  "time"
+)
+
+const (
+  maxExecuteSeconds = 30
 )
 
 type Worker struct {
   Lang      *Lang
   Id        int64
   in        chan Command
+  MaxExecute  time.Duration
 }
 
 func NewWorker (lang *Lang, id int64, in chan Command) *Worker {
-  w := &Worker{lang, id, in}
+  w := &Worker{lang, id, in, maxExecuteSeconds * time.Second}
   w.Start()
   return w
 }
@@ -46,13 +52,24 @@ func (w *Worker) Start () {
       cmd.Stdout, cmd.Stderr = &stdOut, &stdErr
 
       cmd.Start()
-      err := cmd.Wait()
+
+      done := make(chan error)
+      go func () {
+        done <- cmd.Wait()
+      }()
+
+      select {
+      case err := <- done:
+        if err != nil { log.Println("Worker", w.Id, ". Error:", err) }
+      case <- time.After(w.MaxExecute):
+        cmd.Process.Kill()
+        log.Println("Worker", w.Id, ". Killed by timeout.")
+      }
 
       code = cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
 
       log.Println("Worker", w.Id, ". Code", code)
 
-      if err != nil { log.Println("Worker", w.Id, ". Error:", err) }
       c.Response(stdOut.Bytes(), stdErr.Bytes(), code)
     }
 
