@@ -55,9 +55,7 @@ func (w *Worker) Start () {
       ioutil.WriteFile(filePath, []byte(c.Command()), 755)
 
       //clear old container
-      rm := exec.Command("docker", "rm", w.Name)
-      rm.Start()
-      rm.Wait()
+      exec.Command("docker", "rm", w.Name).Run()
 
       // eval code
       cmd := exec.Command("docker", "run", "-v", w.SharePath, "-name=" + w.Name, w.Lang.Image, "/bin/bash", "-l", "-c", w.Lang.RunCommand(filePath))
