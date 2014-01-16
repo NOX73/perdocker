@@ -40,11 +40,13 @@ func NewWorker (lang *Lang, id, timeout int64, in chan Command) *Worker {
 func (w *Worker) Start () {
   log.Println("Starting", w.Lang.Name, "worker ", w.Id)
 
-
   go func () {
 
     //kill old container
     exec.Command("docker", "kill", w.Name).Run()
+    exec.Command("docker", "rm", w.Name).Run()
+
+    time.Sleep(2 * time.Second)
 
     for {
       c := <- w.in
@@ -53,10 +55,6 @@ func (w *Worker) Start () {
       filePath := w.Path + w.Lang.uniqFileName() 
 
       ioutil.WriteFile(filePath, []byte(c.Command()), 755)
-
-      //clear old container
-      exec.Command("docker", "rm", w.Name).Run()
-
       // eval code
       cmd := exec.Command("docker", "run", "-v", w.SharePath, "-name=" + w.Name, w.Lang.Image, "/bin/bash", "-l", "-c", w.Lang.RunCommand(filePath))
 
@@ -84,13 +82,20 @@ func (w *Worker) Start () {
         err = <- done
       }
 
-      if err != nil { log.Println("Worker", w.Id, ". Error:", err) }
-
-      code = cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
+      if err != nil { 
+        code = cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
+      } else {
+        code = err.(*exec.ExitError).Sys().(syscall.WaitStatus).ExitStatus()
+      }
 
       log.Println("Worker", w.Id, ". Code", code)
 
       c.Response(stdOut.Bytes(), stdErr.Bytes(), code)
+
+      //clear old container
+      exec.Command("docker", "rm", w.Name).Run()
+      //wait for remove
+      time.Sleep(2 * time.Second)
     }
 
   }()
