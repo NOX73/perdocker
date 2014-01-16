@@ -11,7 +11,7 @@ import (
 )
 
 const (
-  maxExecuteSeconds = 30
+  maxExecuteSeconds = 60
 )
 
 type Worker struct {
@@ -24,10 +24,13 @@ type Worker struct {
   SharePath string
 }
 
-func NewWorker (lang *Lang, id int64, in chan Command) *Worker {
+func NewWorker (lang *Lang, id, timeout int64, in chan Command) *Worker {
+
   wName := "perdoker_" + lang.Name +"_" + strconv.FormatInt(id, 10)
   path := "/tmp/" + lang.Name + "/"
   sharePath := path + ":" + path
+
+  if timeout > maxExecuteSeconds { timeout = maxExecuteSeconds }
 
   w := &Worker{lang, id, in, maxExecuteSeconds * time.Second, wName, path, sharePath }
   w.Start()
@@ -73,7 +76,6 @@ func (w *Worker) Start () {
       case err = <- done:
       case <- time.After(w.MaxExecute):
         cmd.Process.Kill()
-        //exec.Command("docker", "kill", w.Name).Run()
         log.Println("Worker", w.Id, ". Killed by timeout.")
         err = <- done
       }

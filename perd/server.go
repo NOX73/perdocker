@@ -12,9 +12,9 @@ type config struct {
   port string
 }
 
-func NewServer (port string, workers map[string]int) Server {
-  ruby := NewRunner(Ruby, workers["ruby"])
-  nodejs := NewRunner(Nodejs, workers["nodejs"])
+func NewServer (port string, workers map[string]int, timeout int64) Server {
+  ruby := NewRunner(Ruby, workers["ruby"], timeout)
+  nodejs := NewRunner(Nodejs, workers["nodejs"], timeout)
 
   return &server{ &config{port}, ruby, nodejs }
 }

@@ -13,13 +13,14 @@ type Runner interface {
 type runner struct {
   Lang      *Lang
   runCh     chan Command
+  Timeout   int64
 }
 
 var workerId int64
 var workerIdLock sync.Mutex
 
-func NewRunner(lang *Lang, workers int) *runner {
-  r := &runner{lang, make(chan Command)}
+func NewRunner(lang *Lang, workers int, timeout int64) *runner {
+  r := &runner{lang, make(chan Command), timeout}
   r.RunWorkers(workers)
   return r
 }
@@ -42,5 +43,5 @@ func (r *runner) RunWorker () {
     wid := workerId
   workerIdLock.Unlock()
 
-  NewWorker(r.Lang, wid, r.runCh)
+  NewWorker(r.Lang, wid, r.Timeout, r.runCh )
 }
