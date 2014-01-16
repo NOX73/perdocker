@@ -22,6 +22,8 @@ func NewWorker (lang *Lang, id int64, in chan Command) *Worker {
 }
 
 func (w *Worker) Start () {
+  log.Println("Starting", w.Lang.Name, "worker ", w.Id)
+
   path := "/tmp/" + w.Lang.Name + "/"
   wName := "perdoker_" + w.Lang.Name +"_" + strconv.FormatInt(w.Id, 10)
   sharePath := path + ":" + path
@@ -30,6 +32,7 @@ func (w *Worker) Start () {
 
     for {
       c := <- w.in
+      log.Println("Worker", w.Id, ". Precessing", w.Lang.Name)
 
       filePath := path + w.Lang.uniqFileName() 
 
@@ -47,7 +50,8 @@ func (w *Worker) Start () {
 
       code = cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
 
-      if err != nil { log.Println("Error:", err) }
+      log.Println("Worker", w.Id, ". Code", code)
+      if err != nil { log.Println("Worker", w.Id, ". Error:", err) }
       c.Response(stdOut.Bytes(), stdErr.Bytes(), code)
     }
 
