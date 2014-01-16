@@ -9,15 +9,16 @@ import (
 var httpPort string
 
 func main () {
-  var rubyWorkers int
+  var rubyWorkers, nodejsWorkers int
   var w sync.WaitGroup
   w.Add(1)
 
   flag.StringVar(&httpPort, "port", "8080", "HTTP server port.")
-  flag.IntVar(&rubyWorkers, "ruby-workers", 1, "HTTP server port.")
+  flag.IntVar(&rubyWorkers, "ruby-workers", 1, "Count of ruby workers.")
+  flag.IntVar(&nodejsWorkers, "nodejs-workers", 1, "Count of nodejs workers.")
   flag.Parse()
 
-  workers := map[string]int{ "ruby": rubyWorkers }
+  workers := map[string]int{ "ruby": rubyWorkers, "nodejs": nodejsWorkers }
   server := perd.NewServer(httpPort, workers)
 
   go func(){
