@@ -58,13 +58,16 @@ func (w *Worker) Start () {
         done <- cmd.Wait()
       }()
 
+      var err error
       select {
-      case err := <- done:
-        if err != nil { log.Println("Worker", w.Id, ". Error:", err) }
+      case err = <- done:
       case <- time.After(w.MaxExecute):
         cmd.Process.Kill()
         log.Println("Worker", w.Id, ". Killed by timeout.")
+        err = <- done
       }
+
+      if err != nil { log.Println("Worker", w.Id, ". Error:", err) }
 
       code = cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
 
