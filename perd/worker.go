@@ -32,7 +32,7 @@ func (w *Worker) Start () {
 
     for {
       c := <- w.in
-      log.Println("Worker", w.Id, ". Precessing", w.Lang.Name)
+      log.Println("Worker", w.Id, ". Precessing", w.Lang.Name, "...")
 
       filePath := path + w.Lang.uniqFileName() 
 
@@ -51,6 +51,7 @@ func (w *Worker) Start () {
       code = cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
 
       log.Println("Worker", w.Id, ". Code", code)
+
       if err != nil { log.Println("Worker", w.Id, ". Error:", err) }
       c.Response(stdOut.Bytes(), stdErr.Bytes(), code)
     }
