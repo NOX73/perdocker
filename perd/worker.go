@@ -32,7 +32,7 @@ func NewWorker (lang *Lang, id, timeout int64, in chan Command) *Worker {
 
   if timeout > maxExecuteSeconds { timeout = maxExecuteSeconds }
 
-  w := &Worker{lang, id, in, maxExecuteSeconds * time.Second, wName, path, sharePath }
+  w := &Worker{lang, id, in, time.Duration(timeout) * time.Second, wName, path, sharePath }
   w.Start()
   return w
 }
