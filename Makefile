@@ -10,8 +10,10 @@ images_build_ruby:
 images_build_nodejs:
 	docker build -rm -t="perdocker/nodejs" ./images/nodejs/
 
-images_pull: images_pull_ruby
+images_pull: images_pull_ruby images_pull_nodejs
 
 images_pull_ruby:
 	docker pull perdocker/ruby
+images_pull_nodejs:
+	docker pull perdocker/nodejs
 
