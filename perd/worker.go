@@ -19,10 +19,17 @@ type Worker struct {
   Id        int64
   in        chan Command
   MaxExecute  time.Duration
+  Name      string
+  Path      string
+  SharePath string
 }
 
 func NewWorker (lang *Lang, id int64, in chan Command) *Worker {
-  w := &Worker{lang, id, in, maxExecuteSeconds * time.Second}
+  wName := "perdoker_" + lang.Name +"_" + strconv.FormatInt(id, 10)
+  path := "/tmp/" + lang.Name + "/"
+  sharePath := path + ":" + path
+
+  w := &Worker{lang, id, in, maxExecuteSeconds * time.Second, wName, path, sharePath }
   w.Start()
   return w
 }
@@ -30,9 +37,6 @@ func NewWorker (lang *Lang, id int64, in chan Command) *Worker {
 func (w *Worker) Start () {
   log.Println("Starting", w.Lang.Name, "worker ", w.Id)
 
-  path := "/tmp/" + w.Lang.Name + "/"
-  wName := "perdoker_" + w.Lang.Name +"_" + strconv.FormatInt(w.Id, 10)
-  sharePath := path + ":" + path
 
   go func () {
 
@@ -40,12 +44,17 @@ func (w *Worker) Start () {
       c := <- w.in
       log.Println("Worker", w.Id, ". Precessing", w.Lang.Name, "...")
 
-      filePath := path + w.Lang.uniqFileName() 
+      filePath := w.Path + w.Lang.uniqFileName() 
 
       ioutil.WriteFile(filePath, []byte(c.Command()), 755)
-      exec.Command("docker", "rm", wName).Run()
 
-      cmd := exec.Command("docker", "run", "-v", sharePath, "-name=" + wName, w.Lang.Image, "/bin/bash", "-l", "-c", w.Lang.RunCommand(filePath))
+      //clear old container
+      rm := exec.Command("docker", "rm", w.Name)
+      rm.Start()
+      rm.Wait()
+
+      // eval code
+      cmd := exec.Command("docker", "run", "-v", w.SharePath, "-name=" + w.Name, w.Lang.Image, "/bin/bash", "-l", "-c", w.Lang.RunCommand(filePath))
 
       var stdOut, stdErr bytes.Buffer
       var code int
@@ -58,12 +67,12 @@ func (w *Worker) Start () {
         done <- cmd.Wait()
       }()
 
+      // wait timout
       var err error
       select {
       case err = <- done:
       case <- time.After(w.MaxExecute):
-        //cmd.Process.Kill()
-        exec.Command("docker", "kill", wName).Run()
+        exec.Command("docker", "kill", w.Name).Run()
         log.Println("Worker", w.Id, ". Killed by timeout.")
         err = <- done
       }
