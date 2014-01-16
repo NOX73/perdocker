@@ -38,19 +38,15 @@ func NewWorker (lang *Lang, id, timeout int64, in chan Command) *Worker {
 }
 
 func (w *Worker) Start () {
-  log.Println("Starting", w.Lang.Name, "worker ", w.Id)
+  w.log("Starting", w.Lang.Name)
 
   go func () {
 
-    //kill old container
-    exec.Command("docker", "kill", w.Name).Run()
-    exec.Command("docker", "rm", w.Name).Run()
-
-    time.Sleep(2 * time.Second)
+    w.clearContainer()
 
     for {
       c := <- w.in
-      log.Println("Worker", w.Id, ". Precessing", w.Lang.Name, "...")
+      w.log( "Precessing", w.Lang.Name, "...")
 
       filePath := w.Path + w.Lang.uniqFileName() 
 
@@ -75,10 +71,10 @@ func (w *Worker) Start () {
       case err = <- done:
       case <- time.After(w.MaxExecute):
         // TODO: not so cool
-        cmd.Process.Kill()
-        exec.Command("docker", "kill", w.Name).Run()
+        //cmd.Process.Kill()
+        w.killContainer()
 
-        log.Println("Worker", w.Id, ". Killed by timeout.")
+        w.log("Killed by timeout")
         err = <- done
       }
 
@@ -88,16 +84,33 @@ func (w *Worker) Start () {
         code = err.(*exec.ExitError).Sys().(syscall.WaitStatus).ExitStatus()
       }
 
-      log.Println("Worker", w.Id, ". Code", code)
+      w.log("Code", code)
 
       c.Response(stdOut.Bytes(), stdErr.Bytes(), code)
 
-      //clear old container
-      exec.Command("docker", "rm", w.Name).Run()
-      //wait for remove
-      time.Sleep(2 * time.Second)
+      w.rmContainer()
     }
 
   }()
 
+}
+
+func (w *Worker) log (s ...interface{}) {
+  var params = make([]interface{}, 0)
+  params = append(params, "Worker:", w.Id, ">")
+  params = append(params, s...)
+  log.Println(params...)
+}
+
+func (w *Worker) killContainer () {
+  for { if exec.Command("docker", "kill", w.Name).Run() == nil {break} else {w.log("Can't kill")} }
+}
+
+func (w *Worker) rmContainer () {
+  for { if exec.Command("docker", "rm", w.Name).Run() == nil {break} else {w.log("Can't rm")} }
+}
+
+func (w *Worker) clearContainer () {
+  w.killContainer()
+  w.rmContainer()
 }
