@@ -43,6 +43,9 @@ func (w *Worker) Start () {
 
   go func () {
 
+    //kill old container
+    exec.Command("docker", "kill", w.Name).Run()
+
     for {
       c := <- w.in
       log.Println("Worker", w.Id, ". Precessing", w.Lang.Name, "...")
