@@ -3,10 +3,12 @@ install: images_pull
 run:
 	go run main.go
 
-images_build: images_build_ruby
+images_build: images_build_ruby images_build_nodejs
 
 images_build_ruby:
 	docker build -rm -t="perdocker/ruby" ./images/ruby/
+images_build_nodejs:
+	docker build -rm -t="perdocker/nodejs" ./images/nodejs/
 
 images_pull: images_pull_ruby
 
