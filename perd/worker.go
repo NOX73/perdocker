@@ -82,7 +82,7 @@ func (w *Worker) Start () {
         err = <- done
       }
 
-      if err != nil { 
+      if err == nil { 
         code = cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
       } else {
         code = err.(*exec.ExitError).Sys().(syscall.WaitStatus).ExitStatus()
