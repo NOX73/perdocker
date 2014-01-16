@@ -76,6 +76,8 @@ func (w *Worker) Start () {
       select {
       case err = <- done:
       case <- time.After(w.MaxExecute):
+        // TODO: not so cool
+        cmd.Process.Kill()
         exec.Command("docker", "kill", w.Name).Run()
 
         log.Println("Worker", w.Id, ". Killed by timeout.")
