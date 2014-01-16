@@ -6,7 +6,11 @@ FROM      ubuntu
 MAINTAINER Nox73
 
 # make sure the package repository is up to date
-RUN apt-get install -y python-software-properties
-RUN add-apt-repository -y ppa:chris-lea/node.js
-RUN apt-get update
-RUN apt-get install -y nodejs
+RUN apt-get install -y curl build-essential lamp-server^
+
+WORKDIR /tmp/
+
+RUN curl http://nodejs.org/dist/v0.10.24/node-v0.10.24-linux-x64.tar.gz > node-v0.10.24-linux-x64.tar.gz
+RUN tar -xvzf node-v0.10.24-linux-x64.tar.gz
+RUN mv node-v0.10.24-linux-x64 /usr/local/node
+RUN ln -s /usr/local/node/bin/node /usr/bin/node
