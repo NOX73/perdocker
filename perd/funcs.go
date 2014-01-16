@@ -1,7 +1,10 @@
 package perd
 
-import "math/rand"
-import "strconv"
+import (
+  "math/rand"
+  "strconv"
+  "sync"
+)
 
 const (
   randomIdLength = 10
@@ -18,7 +21,13 @@ func randomId () string {
 }
 
 var fileNameId int64
+var fileNameIdMutex sync.Mutex
+
 func uniqFileName () string {
-  fileNameId++
-  return strconv.FormatInt(fileNameId, 10)
+  fileNameIdMutex.Lock()
+    fileNameId++
+    id := fileNameId
+  fileNameIdMutex.Unlock()
+
+  return strconv.FormatInt(id, 10)
 }
