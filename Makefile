@@ -1,7 +1,10 @@
 install: images_pull
 
 run:
-	go run main.go
+	./bin/perdocker
+
+build:
+	go build main.go && mv main ./bin/perdocker && chmod +x ./bin/perdocker
 
 images_build: images_build_ruby images_build_nodejs
 
