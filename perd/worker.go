@@ -104,12 +104,12 @@ func (w *Worker) log (s ...interface{}) {
 
 func (w *Worker) killContainer () {
   // kill while container run
-  for { if exec.Command("docker", "kill", w.Name).Run() != nil {break} else {w.log("Can't kill")} }
+  for { if exec.Command("docker", "kill", w.Name).Run() != nil {break} }
 }
 
 func (w *Worker) rmContainer () {
   // remove while container exist
-  for { if exec.Command("docker", "rm", w.Name).Run() != nil {break} else {w.log("Can't rm")} }
+  for { if exec.Command("docker", "rm", w.Name).Run() != nil {break} }
 }
 
 func (w *Worker) clearContainer () {
