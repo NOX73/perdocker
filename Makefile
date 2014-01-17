@@ -1,10 +1,9 @@
 install: pull-images
 
-run:
-	./bin/docker -d & ./bin/perdocker
+run: run-docker run-perdocker
 
 run-docker:
-	./bin/docker -d
+	sudo ./bin/docker -d &
 run-perdocker:
 	./bin/perdocker
 
