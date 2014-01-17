@@ -1,5 +1,10 @@
 install: pull-images
 
+stop: docker-stop
+
+docker-stop:
+	kill -QUIT `cat /var/run/docker.pid`
+
 run: run-docker run-perdocker
 
 run-docker:
