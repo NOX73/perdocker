@@ -37,10 +37,19 @@ make install
 make run
 ```
 
+> **NOTE:**
+> Perdocker correctly works only with latest dev Docker version. Cause
+> is [this bug](https://github.com/dotcloud/docker/issues/1319). Bug
+> will be fixed only for 0.8.0 version of Docker. But compiled dev vesion
+> of docker you can find in `bin/` directory.
+
+Before run you may be necessary to rebuild perdocker. 
+Just run `make build`.
+
 ## Flags
 
 ```bash
-make run -port 80 -ruby-workers 5 -nodejs-workers 5
+make run -port 80 -ruby-workers 5 -nodejs-workers 5 -timeout 5
 ```
 
 ## Defaluts
@@ -48,6 +57,7 @@ make run -port 80 -ruby-workers 5 -nodejs-workers 5
 - port 8080
 - 1 ruby worker
 - 1 nodejs worker
+- timeout 60 seconds
 
 ## Coming soon
 
