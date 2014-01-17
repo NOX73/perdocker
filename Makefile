@@ -1,22 +1,27 @@
-install: images_pull
+install: pull-images
 
 run:
+	./bin/docker -d & ./bin/perdocker
+
+run-docker:
+	./bin/docker -d
+run-perdocker:
 	./bin/perdocker
 
 build:
 	go build main.go && mv main ./bin/perdocker && chmod +x ./bin/perdocker
 
-images_build: images_build_ruby images_build_nodejs
+build-images: build-image-ruby build-image-nodejs
 
-images_build_ruby:
+build-image-ruby:
 	docker build -rm -t="perdocker/ruby" ./images/ruby/
-images_build_nodejs:
+build-image-nodejs:
 	docker build -rm -t="perdocker/nodejs" ./images/nodejs/
 
-images_pull: images_pull_ruby images_pull_nodejs
+pull-images: pull-image-ruby pull-image-nodejs
 
-images_pull_ruby:
+pull-image-ruby:
 	docker pull perdocker/ruby
-images_pull_nodejs:
+pull-image-nodejs:
 	docker pull perdocker/nodejs
 
