@@ -1,14 +1,12 @@
 install: pull-images
 
-stop: docker-stop
-
 docker-stop:
 	sudo kill -QUIT `cat /var/run/docker.pid`
 
-run: run-docker run-perdocker
+run: run-perdocker
 
 run-docker:
-	sudo ./bin/docker -d &
+	sudo ./bin/docker -d
 run-perdocker:
 	./bin/perdocker
 
