@@ -56,6 +56,7 @@ func (w *Worker) Start () {
 
       var stdOut, stdErr bytes.Buffer
       var code int
+
       cmd.Stdout, cmd.Stderr = &stdOut, &stdErr
 
       cmd.Start()
@@ -65,30 +66,24 @@ func (w *Worker) Start () {
         done <- cmd.Wait()
       }()
 
-      // wait timout
-      var err error
       select {
-      case err = <- done:
-      case <- time.After(w.MaxExecute):
-        // TODO: not so cool
-        //cmd.Process.Kill()
-        w.killContainer()
-
-        w.log("Killed by timeout")
-        err = <- done
-      }
-
-      if err == nil { 
+      case <- done:
         code = cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
-      } else {
-        code = err.(*exec.ExitError).Sys().(syscall.WaitStatus).ExitStatus()
+      case <- time.After(w.MaxExecute):
+        w.log("Killed by timeout")
+        w.clearContainer()
+
+        // manualy set killed status
+        code = 137
+
+        <- done
       }
 
       w.log("Code", code)
 
       c.Response(stdOut.Bytes(), stdErr.Bytes(), code)
 
-      w.rmContainer()
+      w.clearContainer()
     }
 
   }()
@@ -102,17 +97,14 @@ func (w *Worker) log (s ...interface{}) {
   log.Println(params...)
 }
 
-func (w *Worker) killContainer () {
-  // kill while container run
-  for { if exec.Command("docker", "kill", w.Name).Run() != nil {break} }
+func (w *Worker) killContainer () error {
+  return exec.Command("docker", "kill", w.Name).Run()
 }
 
-func (w *Worker) rmContainer () {
-  // remove while container exist
-  for { if exec.Command("docker", "rm", w.Name).Run() != nil {break} }
+func (w *Worker) rmContainer () error {
+  return exec.Command("docker", "rm", w.Name).Run()
 }
 
 func (w *Worker) clearContainer () {
-  w.killContainer()
-  w.rmContainer()
+  for w.killContainer() != nil && w.rmContainer() != nil {}
 }
