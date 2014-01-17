@@ -106,5 +106,9 @@ func (w *Worker) rmContainer () error {
 }
 
 func (w *Worker) clearContainer () {
-  for w.killContainer() != nil && w.rmContainer() != nil {}
+  for  {
+    k := w.killContainer() != nil 
+    r := w.rmContainer() != nil
+    if k && r {break}
+  }
 }
