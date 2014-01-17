@@ -49,7 +49,7 @@ Just run `make build`.
 ## Flags
 
 ```bash
-make run -port 80 -ruby-workers 5 -nodejs-workers 5 -timeout 5
+./bin/perdocker -port 80 -ruby-workers 5 -nodejs-workers 5 -timeout 5
 ```
 
 ## Defaluts
