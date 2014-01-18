@@ -8,6 +8,7 @@ import (
   "syscall"
   "log"
   "time"
+  "os"
 )
 
 const (
@@ -20,19 +21,22 @@ type Worker struct {
   in        chan Command
   MaxExecute  time.Duration
   Name      string
-  Path      string
-  SharePath string
+  tmpHost   string
+  tmpGuest  string
 }
 
 func NewWorker (lang *Lang, id, timeout int64, in chan Command) *Worker {
 
   wName := "perdoker_" + lang.Name +"_" + strconv.FormatInt(id, 10)
-  path := "/tmp/" + lang.Name + "/"
-  sharePath := path + ":" + path
+  tmpHostPath := "/tmp/" + lang.Name + "/" + wName + "/"
+  tmpGuestPath := "/tmp/perdocker/"
+
+  err := os.MkdirAll(tmpHostPath, 755)
+  if err != nil { log.Println(err) }
 
   if timeout > maxExecuteSeconds { timeout = maxExecuteSeconds }
 
-  w := &Worker{lang, id, in, time.Duration(timeout) * time.Second, wName, path, sharePath }
+  w := &Worker{lang, id, in, time.Duration(timeout) * time.Second, wName, tmpHostPath, tmpGuestPath }
   w.Start()
   return w
 }
@@ -44,15 +48,17 @@ func (w *Worker) Start () {
 
     w.clearContainer()
 
+    fileHost := w.tmpHost + w.Lang.ExecutableFile()
+    fileGuest := w.tmpGuest + w.Lang.ExecutableFile()
+    runCommand := w.Lang.RunCommand(fileGuest)
+
     for {
       c := <- w.in
       w.log( "Precessing", w.Lang.Name, "...")
 
-      filePath := w.Path + w.Lang.uniqFileName() 
+      ioutil.WriteFile(fileHost, []byte(c.Command()), 755)
 
-      ioutil.WriteFile(filePath, []byte(c.Command()), 755)
-      // eval code
-      cmd := exec.Command("docker", "run", "-v", w.SharePath, "-name=" + w.Name, w.Lang.Image, "/bin/bash", "-l", "-c", w.Lang.RunCommand(filePath))
+      cmd := exec.Command("docker", "run", "-v", w.tmpHost + ":" + w.tmpGuest, "-name=" + w.Name, w.Lang.Image, "/bin/bash", "-l", "-c", runCommand)
 
       var stdOut, stdErr bytes.Buffer
       var code int
@@ -79,7 +85,7 @@ func (w *Worker) Start () {
         <- done
       }
 
-      w.log("Code", code)
+      w.log("Exit status code: ", code)
 
       c.Response(stdOut.Bytes(), stdErr.Bytes(), code)
 
@@ -111,4 +117,7 @@ func (w *Worker) clearContainer () {
     r := w.rmContainer() != nil
     if k && r {break}
   }
+}
+
+func (w *Worker) makeTmpHost () {
 }
