@@ -2,10 +2,11 @@ package perd
 
 
 type Lang struct{
-  Name      string
-  Ext       string   
-  Image     string
-  Command   string
+  Name            string
+  FileName        string
+  Ext             string
+  Image           string
+  Command         string
 }
 
 func (l *Lang) uniqFileName () string {
@@ -16,5 +17,10 @@ func (l *Lang) RunCommand (filePath string) string {
   return l.Command + " " + filePath
 }
 
-var Ruby *Lang = &Lang{"ruby", ".rb", "perdocker/ruby", "ruby"}
-var Nodejs *Lang = &Lang{"nodejs", ".js", "perdocker/nodejs", "node"}
+func (l *Lang) ExecutableFile () string {
+  return l.FileName
+}
+
+var Ruby *Lang = &Lang{"ruby", "run.rb", ".rb", "perdocker/ruby", "ruby"}
+var Nodejs *Lang = &Lang{"nodejs", "index.js", ".js", "perdocker/nodejs", "node"}
+
