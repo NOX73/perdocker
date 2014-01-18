@@ -62,7 +62,7 @@ Just run `make build`.
 ## Coming soon
 
 - timouts per eval.
-- many language support (golang or something else).
+- many language support (golang, php, C, C++, python and something else).
 - improvement run process.
 - start & attach to container instead of run it per request.
 
