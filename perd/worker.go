@@ -112,12 +112,15 @@ func (w *Worker) rmContainer () error {
 }
 
 func (w *Worker) clearContainer () {
-  for  {
-    k := w.killContainer() != nil 
-    r := w.rmContainer() != nil
-    if k && r {break}
+  for w.containerExist() {
+    w.killContainer()
+    w.rmContainer()
   }
 }
 
-func (w *Worker) makeTmpHost () {
+func (w *Worker) containerExist () bool {
+  err := exec.Command("docker", "inspect", w.Name).Run()
+
+  return err != nil
 }
+
