@@ -28,7 +28,7 @@ type Worker struct {
 func NewWorker (lang *Lang, id, timeout int64, in chan Command) *Worker {
 
   wName := "perdoker_" + lang.Name +"_" + strconv.FormatInt(id, 10)
-  tmpHostPath := "/tmp/" + lang.Name + "/" + wName + "/"
+  tmpHostPath := "/tmp/perdocker/" + lang.Name + "/" + wName + "/"
   tmpGuestPath := "/tmp/perdocker/"
 
   err := os.MkdirAll(tmpHostPath, 755)
