@@ -121,6 +121,6 @@ func (w *Worker) clearContainer () {
 func (w *Worker) containerExist () bool {
   err := exec.Command("docker", "inspect", w.Name).Run()
 
-  return err != nil
+  return err == nil
 }
 
