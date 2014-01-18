@@ -11,7 +11,7 @@ run-perdocker:
 	./bin/perdocker
 
 build:
-	go build main.go && mv main ./bin/perdocker && chmod +x ./bin/perdocker
+	go build && mv perdocker ./bin/perdocker && chmod +x ./bin/perdocker
 
 build-images: build-image-ruby build-image-nodejs
 

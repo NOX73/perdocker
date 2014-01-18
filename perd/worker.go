@@ -31,7 +31,7 @@ func NewWorker (lang *Lang, id, timeout int64, in chan Command) *Worker {
   tmpHostPath := "/tmp/perdocker/" + lang.Name + "/" + wName + "/"
   tmpGuestPath := "/tmp/perdocker/"
 
-  err := os.MkdirAll(tmpHostPath, 755)
+  err := os.MkdirAll(tmpHostPath, 0755)
   if err != nil { log.Println(err) }
 
   if timeout > maxExecuteSeconds { timeout = maxExecuteSeconds }
