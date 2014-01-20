@@ -16,9 +16,9 @@ build:
 build-images: build-image-ruby build-image-nodejs
 
 build-image-ruby:
-	docker build -rm -t="perdocker/ruby" ./images/ruby/
+	docker build -rm -t="perdocker/ruby:attach" ./images/ruby/
 build-image-nodejs:
-	docker build -rm -t="perdocker/nodejs" ./images/nodejs/
+	docker build -rm -t="perdocker/nodejs:attach" ./images/nodejs/
 
 pull-images: pull-image-ruby pull-image-nodejs
 

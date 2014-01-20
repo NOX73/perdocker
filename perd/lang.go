@@ -20,5 +20,5 @@ func (l *Lang) ExecutableFile() string {
 	return l.FileName
 }
 
-var Ruby *Lang = &Lang{"ruby", "run.rb", ".rb", "perdocker/ruby:user", "ruby"}
-var Nodejs *Lang = &Lang{"nodejs", "index.js", ".js", "perdocker/nodejs", "node"}
+var Ruby *Lang = &Lang{"ruby", "run.rb", ".rb", "perdocker/ruby:attach", "ruby"}
+var Nodejs *Lang = &Lang{"nodejs", "index.js", ".js", "perdocker/nodejs:attach", "node"}
