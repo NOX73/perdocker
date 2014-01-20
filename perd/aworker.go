@@ -50,7 +50,7 @@ func NewAWorker(lang *Lang, id, timeout int64, in chan Command) Worker {
 }
 
 func (w *aworker) Start() {
-	w.log("Starting", w.Lang.Name)
+	w.log("Starting ...")
 
 	go func() {
 		w.clearContainer()
@@ -60,11 +60,12 @@ func (w *aworker) Start() {
 		fileGuest := w.tmpGuest + w.Lang.ExecutableFile()
 		runCommand := w.Lang.RunCommand(fileGuest)
 
+	workerFinish:
 		for {
 			c := <-w.in
 			w.log("Precessing ...")
 
-			ioutil.WriteFile(fileHost, []byte(c.Command()), 755)
+			ioutil.WriteFile(fileHost, []byte(c.Command()), 0755)
 
 			w.stdInOut.WriteString(runCommand + "\nEXITSTATUS=$?\necho " + w.secretEnd + "\necho $EXITSTATUS\necho " + w.secretEnd + " 1>&2\n")
 			w.stdInOut.Flush()
@@ -74,7 +75,12 @@ func (w *aworker) Start() {
 
 			// Read stdOut
 			for {
-				line, _, _ := w.stdInOut.ReadLine()
+				line, _, err := w.stdInOut.ReadLine()
+				if err != nil {
+					w.log(err)
+					c.Response(out, er, 1)
+					break workerFinish
+				}
 				if string(line) == w.secretEnd {
 					break
 				}
@@ -102,18 +108,23 @@ func (w *aworker) Start() {
 			}
 
 			w.log("Finished ...")
-
 			c.Response(out, er, code)
+
+			w.checkContainer()
 		}
 
 		w.stopContainer()
+		w.log("Stoping ...")
 
 	}()
 
 }
 
+func (w *aworker) checkContainer() {
+}
+
 func (w *aworker) startContainer() {
-	container := exec.Command("docker", "run", "-i", "-v", w.tmpHost+":"+w.tmpGuest, "-name="+w.Name, w.Lang.Image, "/bin/bash", "-l")
+  container := exec.Command("docker", "run", "-i", "-v", w.tmpHost+":"+w.tmpGuest+":ro", "-name="+w.Name, w.Lang.Image, "/bin/bash", "-l")
 	w.Container = container
 
 	in, _ := container.StdinPipe()
