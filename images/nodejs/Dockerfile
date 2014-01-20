@@ -14,3 +14,8 @@ RUN curl http://nodejs.org/dist/v0.10.24/node-v0.10.24-linux-x64.tar.gz > node-v
 RUN tar -xvzf node-v0.10.24-linux-x64.tar.gz
 RUN mv node-v0.10.24-linux-x64 /usr/local/node
 RUN ln -s /usr/local/node/bin/node /usr/bin/node
+
+RUN groupadd perdocker
+RUN useradd -g perdocker perdocker
+
+USER perdocker
