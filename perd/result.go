@@ -11,9 +11,9 @@ func NewResult(out, err []byte, code int) Result {
 }
 
 type result struct {
-	StdOut     string `json:"std_out"`
-	StdErr     string `json:"std_err"`
-	StatusCode int    `json:"code"`
+	StdOut     string `json:"stdout"`
+	StdErr     string `json:"stderr"`
+	StatusCode int    `json:"exitCode"`
 }
 
 func (r *result) Bytes() []byte {

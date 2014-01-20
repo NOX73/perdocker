@@ -15,7 +15,11 @@ const (
 	maxExecuteSeconds = 60
 )
 
-type Worker struct {
+type Worker interface {
+	Start()
+}
+
+type worker struct {
 	Lang       *Lang
 	Id         int64
 	in         chan Command
@@ -25,7 +29,7 @@ type Worker struct {
 	tmpGuest   string
 }
 
-func NewWorker(lang *Lang, id, timeout int64, in chan Command) *Worker {
+func NewWorker(lang *Lang, id, timeout int64, in chan Command) Worker {
 
 	wName := "perdoker_" + lang.Name + "_" + strconv.FormatInt(id, 10)
 	tmpHostPath := "/tmp/perdocker/" + lang.Name + "/" + wName + "/"
@@ -40,12 +44,12 @@ func NewWorker(lang *Lang, id, timeout int64, in chan Command) *Worker {
 		timeout = maxExecuteSeconds
 	}
 
-	w := &Worker{lang, id, in, time.Duration(timeout) * time.Second, wName, tmpHostPath, tmpGuestPath}
+	w := &worker{lang, id, in, time.Duration(timeout) * time.Second, wName, tmpHostPath, tmpGuestPath}
 	w.Start()
 	return w
 }
 
-func (w *Worker) Start() {
+func (w *worker) Start() {
 	w.log("Starting", w.Lang.Name)
 
 	go func() {
@@ -100,29 +104,29 @@ func (w *Worker) Start() {
 
 }
 
-func (w *Worker) log(s ...interface{}) {
+func (w *worker) log(s ...interface{}) {
 	var params = make([]interface{}, 0)
-	params = append(params, "Worker:", w.Id, ">")
+	params = append(params, w.Lang.Name, "worker", w.Id, "\t")
 	params = append(params, s...)
 	log.Println(params...)
 }
 
-func (w *Worker) killContainer() error {
+func (w *worker) killContainer() error {
 	return exec.Command("docker", "kill", w.Name).Run()
 }
 
-func (w *Worker) rmContainer() error {
+func (w *worker) rmContainer() error {
 	return exec.Command("docker", "rm", w.Name).Run()
 }
 
-func (w *Worker) clearContainer() {
+func (w *worker) clearContainer() {
 	for w.containerExist() {
 		w.killContainer()
 		w.rmContainer()
 	}
 }
 
-func (w *Worker) containerExist() bool {
+func (w *worker) containerExist() bool {
 	err := exec.Command("docker", "inspect", w.Name).Run()
 
 	return err == nil
