@@ -124,7 +124,7 @@ func (w *aworker) checkContainer() {
 }
 
 func (w *aworker) startContainer() {
-  container := exec.Command("docker", "run", "-i", "-v", w.tmpHost+":"+w.tmpGuest+":ro", "-name="+w.Name, w.Lang.Image, "/bin/bash", "-l")
+  container := exec.Command("docker", "run", "-m", "1m", "-i", "-v", w.tmpHost+":"+w.tmpGuest+":ro", "-name="+w.Name, w.Lang.Image, "/bin/bash", "-l")
 	w.Container = container
 
 	in, _ := container.StdinPipe()
