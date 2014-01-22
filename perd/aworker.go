@@ -133,6 +133,8 @@ func (w *aworker) Start() {
 			w.log("Finished ...")
 			c.Response(out, er, code)
 
+      // TODO: kill proccess instead restart container
+      // it's required docker 0.8.0 feature for run command inside exists container.
 			if code != 137 {
 				w.checkContainer()
 			} else {
