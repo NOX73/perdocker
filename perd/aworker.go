@@ -44,10 +44,6 @@ func NewAWorker(lang *Lang, id, timeout int64, in chan Command) Worker {
 		log.Println(err)
 	}
 
-	if timeout > maxExecuteSeconds {
-		timeout = maxExecuteSeconds
-	}
-
 	w := &aworker{
 		worker:    &worker{lang, id, in, time.Duration(timeout) * time.Second, wName, tmpHostPath, tmpGuestPath},
 		secretEnd: "raabbbccc",

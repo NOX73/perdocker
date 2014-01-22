@@ -11,10 +11,6 @@ import (
 	"time"
 )
 
-const (
-	maxExecuteSeconds = 60
-)
-
 type Worker interface {
 	Start()
 }
@@ -38,10 +34,6 @@ func NewWorker(lang *Lang, id, timeout int64, in chan Command) Worker {
 	err := os.MkdirAll(tmpHostPath, 0755)
 	if err != nil {
 		log.Println(err)
-	}
-
-	if timeout > maxExecuteSeconds {
-		timeout = maxExecuteSeconds
 	}
 
 	w := &worker{lang, id, in, time.Duration(timeout) * time.Second, wName, tmpHostPath, tmpGuestPath}
