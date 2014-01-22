@@ -6,6 +6,8 @@ import (
   "strconv"
   "bufio"
   "errors"
+  "os"
+  "io/ioutil"
 )
 
 type Container interface {
@@ -214,7 +216,7 @@ func readLinesToChannel(r *bufio.Reader, ch chan []byte) {
     if err != nil { break }
     ch <- line
   }
-  ch.Close()
+  close(ch)
 }
 
 func generateEnd () []byte {
