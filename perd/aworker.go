@@ -97,7 +97,7 @@ func (w *aworker) Start() {
 				select {
 				case line := <-outChan:
 
-					if string(line)[:len(w.secretEnd)] == w.secretEnd {
+					if len(line) > len(w.secretEnd) && string(line)[:len(w.secretEnd)] == w.secretEnd {
 						scode := string(line)[len(w.secretEnd) : len(line)-1]
 						code, err = strconv.Atoi(scode)
 
@@ -112,7 +112,7 @@ func (w *aworker) Start() {
 
 				case line := <-errChan:
 
-					if string(line)[:len(w.secretEnd)] == w.secretEnd {
+					if len(line) > len(w.secretEnd) && string(line)[:len(w.secretEnd)] == w.secretEnd {
 						errChan = nil
 					} else {
 						er = append(er, line...)
