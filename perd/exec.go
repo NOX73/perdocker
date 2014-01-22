@@ -49,7 +49,6 @@ func (e *Exec) Start () {
 
     select {
     case line, ok := <- e.out:
-
       if !ok { e.done <- ErrReadStds; return }
 
       if e.isEnd(line) {
@@ -60,7 +59,6 @@ func (e *Exec) Start () {
       }
 
     case line, ok := <- e.err:
-
       if !ok { e.done <- ErrReadStds; return }
 
       if e.isEnd(line) {

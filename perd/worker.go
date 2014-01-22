@@ -70,7 +70,7 @@ func (w *worker) Start() {
     }
 
     w.log("Finished ...")
-    w.Container.ReInit()
+    w.Container.Clear()
   }
 
   w.Container.Stop()
