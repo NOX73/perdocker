@@ -166,27 +166,19 @@ func (w *aworker) startContainer() {
 		panic(err)
 	}
 
-	go func() {
-		for {
-			line, err := w.stdInOut.ReadBytes(eol)
-			if err != nil {
-				break
-			}
-			w.outChan <- line
-		}
-		w.log("StdInOut closed.", err)
-	}()
+  go w.readStdTo(w.stdInOut, w.outChan)
+  go w.readStdTo(w.stdErr, w.errChan)
+}
 
-	go func() {
-		for {
-			line, err := w.stdErr.ReadBytes(eol)
-			if err != nil {
-				break
-			}
-			w.errChan <- line
-		}
-		w.log("StdErr read closed.", err)
-	}()
+func (w *aworker) readStdTo (reader io.Reader, ch chan []byte) {
+  for {
+    line, err := w.stdInOut.ReadBytes(eol)
+    if err != nil {
+      w.log("Read closed.", err)
+      break
+    }
+    w.outChan <- line
+  }
 }
 
 func (w *aworker) stopContainer() {
