@@ -1,125 +1,86 @@
 package perd
 
 import (
-	"bytes"
-	"io/ioutil"
-	"log"
-	"os"
-	"os/exec"
-	"strconv"
-	"syscall"
 	"time"
+  "log"
+)
+
+const (
+	eol byte = 10
 )
 
 type Worker interface {
 	Start()
 }
 
+// This worker do not run container per request.
 type worker struct {
 	Lang       *Lang
 	Id         int64
-	in         chan Command
 	MaxExecute time.Duration
-	Name       string
-	tmpHost    string
-	tmpGuest   string
+	Container Container
+
+	in         chan Command
 }
 
-func NewWorker(lang *Lang, id, timeout int64, in chan Command) Worker {
+func NewWorker(lang *Lang, id, timeout int64, in chan Command) (Worker, error) {
 
-	wName := "perdoker_" + lang.Name + "_" + strconv.FormatInt(id, 10)
-	tmpHostPath := "/tmp/perdocker/" + lang.Name + "/" + wName + "/"
-	tmpGuestPath := "/tmp/perdocker/"
+  container, err := NewContainer(id, lang)
+	if err != nil { return nil, err }
 
-	err := os.MkdirAll(tmpHostPath, 0755)
-	if err != nil {
-		log.Println(err)
+	w := &worker{
+    Lang: lang,
+    Id: id,
+    MaxExecute: time.Duration(timeout) * time.Second,
+
+    in: in,
 	}
 
-	w := &worker{lang, id, in, time.Duration(timeout) * time.Second, wName, tmpHostPath, tmpGuestPath}
-	w.Start()
-	return w
+	go w.Start()
+	return w, nil
 }
 
 func (w *worker) Start() {
-	w.log("Starting", w.Lang.Name)
+	w.log("Starting ...")
 
-	go func() {
+  w.Container.Init()
 
-		w.clearContainer()
+  for {
+    c := <-w.in
+    w.log("Precessing ...")
 
-		fileHost := w.tmpHost + w.Lang.ExecutableFile()
-		fileGuest := w.tmpGuest + w.Lang.ExecutableFile()
-		runCommand := w.Lang.RunCommand(fileGuest)
+    var err error
 
-		for {
-			c := <-w.in
-			w.log("Precessing", w.Lang.Name, "...")
+    command := []byte(c.Command())
+    exec, err := w.Container.Exec(command)
 
-			ioutil.WriteFile(fileHost, []byte(c.Command()), 755)
+    err = exec.Wait(w.MaxExecute)
 
-			cmd := exec.Command("docker", "run", "-v", w.tmpHost+":"+w.tmpGuest, "-name="+w.Name, w.Lang.Image, "/bin/bash", "-l", "-c", runCommand)
+    if err != nil {
+      w.log("Timeout kill ...")
+      c.Response(exec.StdOut, exec.StdErr, 137)
 
-			var stdOut, stdErr bytes.Buffer
-			var code int
+      // TODO: kill proccess instead restart container
+      // it's required docker 0.8.0 feature for run command inside exists container.
 
-			cmd.Stdout, cmd.Stderr = &stdOut, &stdErr
+      w.Container.Restart()
+    } else {
+      c.Response(exec.StdOut, exec.StdErr, exec.ExitCode)
+    }
 
-			cmd.Start()
+    w.log("Finished ...")
+    w.Container.ReInit()
+  }
 
-			done := make(chan error)
-			go func() {
-				done <- cmd.Wait()
-			}()
-
-			select {
-			case <-done:
-				code = cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
-			case <-time.After(w.MaxExecute):
-				w.log("Killed by timeout")
-				w.clearContainer()
-
-				// manualy set killed status
-				code = 137
-
-				<-done
-			}
-
-			w.log("Exit status code: ", code)
-
-			c.Response(stdOut.Bytes(), stdErr.Bytes(), code)
-
-			w.clearContainer()
-		}
-
-	}()
+  w.Container.Stop()
+  w.log("Stoping ...")
 
 }
 
-func (w *worker) log(s ...interface{}) {
-	var params = make([]interface{}, 0)
-	params = append(params, w.Lang.Name, "worker", w.Id, "\t")
-	params = append(params, s...)
-	log.Println(params...)
+func (w *worker) log (s ...interface{}) {
+  var params = make([]interface{}, 0)
+  params = append(params, w.Lang.Name, "worker", w.Id, "\t")
+  params = append(params, s...)
+  log.Println(params...)
 }
 
-func (w *worker) killContainer() error {
-	return exec.Command("docker", "kill", w.Name).Run()
-}
-
-func (w *worker) rmContainer() error {
-	return exec.Command("docker", "rm", w.Name).Run()
-}
-
-func (w *worker) clearContainer() {
-	for w.containerExist() {
-		w.killContainer()
-		w.rmContainer()
-	}
-}
-
-func (w *worker) containerExist() bool {
-	err := exec.Command("docker", "inspect", w.Name).Run()
-
-	return err == nil
-}

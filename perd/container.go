@@ -9,10 +9,13 @@ import (
 )
 
 type Container interface {
+  Init()
+  Clear()
   Start() error
   Stop()
   Restart()
-  Exec(string) (error, *Exec)
+  Exec([]byte) (*Exec, error)
+  ReInit()
 
   StdIn()   chan<- []byte
   StdOut()  <-chan []byte
@@ -38,9 +41,13 @@ type container struct {
   name string
 
   end []byte
+  command string
 
   tmpHost string
   tmpGuest string
+
+  fileHost string
+  fileGuest string
 
 	stdin  io.WriteCloser
 	stdout io.ReadCloser
@@ -55,41 +62,57 @@ type container struct {
   errCh  chan []byte
 }
 
-func NewContainer(id int64, lang *Lang) Container {
+func NewContainer(id int64, lang *Lang) (Container, error) {
 
   name := "perdoker_" + lang.Name + "_" + strconv.FormatInt(id, 10)
+  tmpHost := "/tmp/perdocker/" + lang.Name + "/" + name + "/"
+  tmpGuest := "/tmp/perdocker/"
+  fileGuest := tmpGuest + lang.ExecutableFile()
 
   c := &container{
     Id: id,
     Lang: lang,
 
     name: name,
-    tmpHost: "/tmp/perdocker/" + lang.Name + "/" + name + "/",
-    tmpGuest: "/tmp/perdocker/",
+
+    fileHost: tmpHost + lang.ExecutableFile(),
+    fileGuest: fileGuest,
+
+    tmpHost: tmpHost,
+    tmpGuest: tmpGuest,
+
+    command: lang.RunCommand(fileGuest),
 
     end: generateEnd(),
   }
 
-  return c
+	err := os.MkdirAll(c.tmpHost, 0755)
+  if err != nil { return nil, err }
+
+  return c, nil
 }
 
-func (c *container) Exec (command string) (error, *Exec) {
+func (c *container) Exec (file []byte) (*Exec, error) {
   var err error
+
+  err = ioutil.WriteFile(c.fileHost, file, 0755)
+  if err != nil { return nil, err }
+
   in := c.inWriter
 
-  _, err = in.WriteString(command + " 3>&- \n")
-  if err != nil { return err, nil }
+  _, err = in.WriteString(c.command + " 3>&- \n")
+  if err != nil { return nil, err }
   _, err = in.WriteString("echo " + string(c.end) + "$?\n")
-  if err != nil { return err, nil }
+  if err != nil { return nil, err }
   _, err = in.WriteString("echo " + string(c.end) + " 1>&2\n")
-  if err != nil { return err, nil }
+  if err != nil { return nil, err }
 
   in.Flush()
 
   exec := NewExec(c.outCh, c.errCh, c.end)
   go exec.Start()
 
-  return nil, exec
+  return exec, nil
 }
 
 func (c *container) WaitExec () chan<- bool {
@@ -127,7 +150,7 @@ func (c *container) Stop () {
 	c.stdout.Close()
 	c.stderr.Close()
 
-	c.clear()
+	c.Clear()
 }
 
 func (c *container) Restart () {
@@ -147,11 +170,22 @@ func (c *container) StdErr () <-chan []byte {
   return c.errCh
 }
 
-func (c *container) clear () {
+func (c *container) Init () {
+  c.Clear()
+  c.Start()
+}
+
+func (c *container) Clear () {
 	for c.isExist() {
 		c.kill()
 		c.rm()
 	}
+}
+
+func (c *container) ReInit () {
+  //TODO: Fork detector
+  //TODO: Clear stdOut stdErr
+  //TODO: Generate end
 }
 
 func (c *container) rm () error {
@@ -180,6 +214,7 @@ func readLinesToChannel(r *bufio.Reader, ch chan []byte) {
     if err != nil { break }
     ch <- line
   }
+  ch.Close()
 }
 
 func generateEnd () []byte {
@@ -189,5 +224,3 @@ func generateEnd () []byte {
 func (c *container) sharedPaths () string {
   return c.tmpHost + ":" + c.tmpGuest + ":ro"
 }
-
-

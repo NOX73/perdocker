@@ -43,5 +43,5 @@ func (r *runner) RunWorker() {
 	wid := workerId
 	workerIdLock.Unlock()
 
-	NewAWorker(r.Lang, wid, r.Timeout, r.runCh)
+	NewWorker(r.Lang, wid, r.Timeout, r.runCh)
 }
