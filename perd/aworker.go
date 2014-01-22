@@ -2,6 +2,7 @@ package perd
 
 import (
 	"bufio"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -23,6 +24,13 @@ type aworker struct {
 	Container *exec.Cmd
 	stdInOut  *bufio.ReadWriter
 	stdErr    *bufio.Reader
+
+	outChan chan []byte
+	errChan chan []byte
+
+	stdin  io.WriteCloser
+	stdout io.ReadCloser
+	stderr io.ReadCloser
 }
 
 func NewAWorker(lang *Lang, id, timeout int64, in chan Command) Worker {
@@ -42,7 +50,9 @@ func NewAWorker(lang *Lang, id, timeout int64, in chan Command) Worker {
 
 	w := &aworker{
 		worker:    &worker{lang, id, in, time.Duration(timeout) * time.Second, wName, tmpHostPath, tmpGuestPath},
-		secretEnd: "asdasdfasdfdas",
+		secretEnd: "raabbbccc",
+		outChan:   make(chan []byte, 5),
+		errChan:   make(chan []byte, 5),
 	}
 
 	w.Start()
@@ -60,57 +70,75 @@ func (w *aworker) Start() {
 		fileGuest := w.tmpGuest + w.Lang.ExecutableFile()
 		runCommand := w.Lang.RunCommand(fileGuest)
 
-	workerFinish:
 		for {
 			c := <-w.in
 			w.log("Precessing ...")
 
 			ioutil.WriteFile(fileHost, []byte(c.Command()), 0755)
 
-			w.stdInOut.WriteString(runCommand + "\nEXITSTATUS=$?\necho " + w.secretEnd + "\necho $EXITSTATUS\necho " + w.secretEnd + " 1>&2\n")
+			w.stdInOut.WriteString(runCommand + " 3>&- \n")
+			w.stdInOut.WriteString("echo " + w.secretEnd + "$?\n")
+			w.stdInOut.WriteString("echo " + w.secretEnd + " 1>&2\n")
+
 			w.stdInOut.Flush()
 
 			out := make([]byte, 0)
 			er := make([]byte, 0)
+			var code int
+			var err error
 
-			// Read stdOut
+			outChan := w.outChan
+			errChan := w.errChan
+
+			timeout := time.After(w.MaxExecute)
+
 			for {
-				line, _, err := w.stdInOut.ReadLine()
-				if err != nil {
-					w.log(err)
-					c.Response(out, er, 1)
-					break workerFinish
-				}
-				if string(line) == w.secretEnd {
+
+				if errChan == nil && outChan == nil {
 					break
 				}
 
-				out = append(out, line...)
-				out = append(out, eol)
-			}
+				select {
+				case line := <-outChan:
 
-			// Read exitCode
-			scode, _, _ := w.stdInOut.ReadLine()
-			code, err := strconv.Atoi(string(scode))
-			if err != nil {
-				panic(err)
-			}
+					if string(line)[:len(w.secretEnd)] == w.secretEnd {
+						scode := string(line)[len(w.secretEnd) : len(line)-1]
+						code, err = strconv.Atoi(scode)
 
-			// Read stdErr
-			for {
-				line, _, _ := w.stdErr.ReadLine()
-				if string(line) == w.secretEnd {
-					break
+						if err != nil {
+							code = 1
+						}
+
+						outChan = nil
+					} else {
+						out = append(out, line...)
+					}
+
+				case line := <-errChan:
+
+					if string(line)[:len(w.secretEnd)] == w.secretEnd {
+						errChan = nil
+					} else {
+						er = append(er, line...)
+					}
+
+				case <-timeout:
+					w.log("Timeout kill ...")
+					errChan = nil
+					outChan = nil
+					code = 137
 				}
-
-				er = append(er, line...)
-				er = append(er, eol)
 			}
 
 			w.log("Finished ...")
 			c.Response(out, er, code)
 
-			w.checkContainer()
+			if code != 137 {
+				w.checkContainer()
+			} else {
+				w.restartContainer()
+			}
+
 		}
 
 		w.stopContainer()
@@ -121,25 +149,57 @@ func (w *aworker) Start() {
 }
 
 func (w *aworker) checkContainer() {
+  //TODO: Fork detector
 }
 
 func (w *aworker) startContainer() {
-  container := exec.Command("docker", "run", "-m", "1m", "-i", "-v", w.tmpHost+":"+w.tmpGuest+":ro", "-name="+w.Name, w.Lang.Image, "/bin/bash", "-l")
+	container := exec.Command("docker", "run", "-m", "10m", "-c", "1", "-i", "-v", w.tmpHost+":"+w.tmpGuest+":ro", "-name="+w.Name, w.Lang.Image, "/bin/bash", "-l")
 	w.Container = container
 
-	in, _ := container.StdinPipe()
-	out, _ := container.StdoutPipe()
-	er, _ := container.StderrPipe()
+	w.stdin, _ = container.StdinPipe()
+	w.stdout, _ = container.StdoutPipe()
+	w.stderr, _ = container.StderrPipe()
 
-	w.stdInOut = bufio.NewReadWriter(bufio.NewReader(out), bufio.NewWriter(in))
-	w.stdErr = bufio.NewReader(er)
+	w.stdInOut = bufio.NewReadWriter(bufio.NewReader(w.stdout), bufio.NewWriter(w.stdin))
+	w.stdErr = bufio.NewReader(w.stderr)
 
 	err := w.Container.Start()
 	if err != nil {
 		panic(err)
 	}
+
+	go func() {
+		for {
+			line, err := w.stdInOut.ReadBytes(eol)
+			if err != nil {
+				break
+			}
+			w.outChan <- line
+		}
+		w.log("StdInOut closed.", err)
+	}()
+
+	go func() {
+		for {
+			line, err := w.stdErr.ReadBytes(eol)
+			if err != nil {
+				break
+			}
+			w.errChan <- line
+		}
+		w.log("StdErr read closed.", err)
+	}()
 }
 
 func (w *aworker) stopContainer() {
+	w.stdin.Close()
+	w.stdout.Close()
+	w.stderr.Close()
+
 	w.clearContainer()
+}
+
+func (w *aworker) restartContainer() {
+	w.stopContainer()
+	w.startContainer()
 }
