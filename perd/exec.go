@@ -29,13 +29,13 @@ func NewExec (out, err <-chan []byte, end []byte) *Exec {
     out: out,
     err: err,
     end: end,
-    done: make(chan bool, 1),
+    done: make(chan error, 1),
   }
 }
 
 func (e *Exec) Wait(timeout time.Duration) error {
   select {
-  case err <-e.done:
+  case err := <-e.done:
     return err
   case <-time.After(timeout):
     return ErrExecTimout;

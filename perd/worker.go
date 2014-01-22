@@ -29,6 +29,7 @@ func NewWorker(lang *Lang, id, timeout int64, in chan Command) (Worker, error) {
 	if err != nil { return nil, err }
 
 	w := &worker{
+    Container: container,
     Lang: lang,
     Id: id,
     MaxExecute: time.Duration(timeout) * time.Second,
