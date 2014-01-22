@@ -17,11 +17,7 @@ type Container interface {
   Stop()
   Restart()
   Exec([]byte) (*Exec, error)
-  ReInit()
-
-  StdIn()   chan<- []byte
-  StdOut()  <-chan []byte
-  StdErr()  <-chan []byte
+  Remove()
 }
 
 const (
@@ -112,13 +108,10 @@ func (c *container) Exec (file []byte) (*Exec, error) {
   in.Flush()
 
   exec := NewExec(c.outCh, c.errCh, c.end)
+
   go exec.Start()
 
   return exec, nil
-}
-
-func (c *container) WaitExec () chan<- bool {
-  return nil
 }
 
 func (c *container) Start () error {
@@ -141,6 +134,10 @@ func (c *container) Start () error {
 	c.outReader = bufio.NewReader(c.stdout)
 	c.errReader = bufio.NewReader(c.stderr)
 
+  c.inCh = make(chan []byte, 5)
+  c.outCh = make(chan []byte, 5)
+  c.errCh = make(chan []byte, 5)
+
   go readLinesToChannel(c.outReader, c.outCh)
   go readLinesToChannel(c.errReader, c.errCh)
 
@@ -152,7 +149,11 @@ func (c *container) Stop () {
 	c.stdout.Close()
 	c.stderr.Close()
 
-	c.Clear()
+  close(c.inCh)
+  close(c.outCh)
+  close(c.errCh)
+
+	c.Remove()
 }
 
 func (c *container) Restart () {
@@ -160,31 +161,19 @@ func (c *container) Restart () {
   c.Start()
 }
 
-func (c *container) StdIn () chan<- []byte {
-  return c.inCh
-}
-
-func (c *container) StdOut () <-chan []byte {
-  return c.outCh
-}
-
-func (c *container) StdErr () <-chan []byte {
-  return c.errCh
-}
-
 func (c *container) Init () {
-  c.Clear()
+  c.Remove()
   c.Start()
 }
 
-func (c *container) Clear () {
+func (c *container) Remove () {
 	for c.isExist() {
 		c.kill()
 		c.rm()
 	}
 }
 
-func (c *container) ReInit () {
+func (c *container) Clear () {
   //TODO: Fork detector
   //TODO: Clear stdOut stdErr
   //TODO: Generate end
@@ -216,11 +205,10 @@ func readLinesToChannel(r *bufio.Reader, ch chan []byte) {
     if err != nil { break }
     ch <- line
   }
-  close(ch)
 }
 
 func generateEnd () []byte {
-  return []byte("asdfj;asdjf;ajsd;fj")
+  return []byte("asdfasdfasdfasdfgfsdfbewrv")
 }
 
 func (c *container) sharedPaths () string {
