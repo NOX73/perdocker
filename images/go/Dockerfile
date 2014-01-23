@@ -10,7 +10,7 @@ RUN apt-get update
 RUN apt-get install -y wget ca-certificates build-essential
 
 ### For some reason `go get` required these to run, despite it not being documented?
-RUN apt-get install -y git mercurial
+### RUN apt-get update && apt-get install -y -q mercurial
 
 ENV PATH $PATH:/usr/local/go/bin
 ENV GOPATH /usr/local/go/
