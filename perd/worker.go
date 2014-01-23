@@ -46,7 +46,11 @@ func NewWorker(lang *Lang, id, timeout int64, in chan Command) (Worker, error) {
 func (w *worker) Start() {
 	w.log("Starting ...")
 
-	w.Container.Init()
+	err := w.Container.Init()
+	if err != nil {
+		w.log("Can't start container.", err)
+		return
+	}
 
 	for {
 		c := <-w.in

@@ -12,11 +12,11 @@ import (
 )
 
 type Container interface {
-	Init()
+	Init() error
 	Clear()
 	Start() error
 	Stop()
-	Restart()
+	Restart() error
 	Exec([]byte) (*Exec, error)
 	Remove()
 }
@@ -170,15 +170,20 @@ func (c *container) Stop() {
 	c.Remove()
 }
 
-func (c *container) Restart() {
+func (c *container) Restart() error {
 	c.Stop()
-	c.Start()
+	return c.Start()
 }
 
-func (c *container) Init() {
+func (c *container) Init() error {
+	var err error
 	c.Remove()
-	c.Start()
+	err = c.Start()
+	if err != nil {
+		return err
+	}
 	c.Clear()
+	return nil
 }
 
 func (c *container) Remove() {
