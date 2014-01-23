@@ -22,4 +22,4 @@ func (l *Lang) ExecutableFile() string {
 
 var Ruby *Lang = &Lang{"ruby", "run.rb", ".rb", "perdocker/ruby:attach", "ruby"}
 var Nodejs *Lang = &Lang{"nodejs", "index.js", ".js", "perdocker/nodejs:attach", "node"}
-var Golang *Lang = &Lang{"golang", "main.go", ".go", "perdocker/go:attach", "go"}
+var Golang *Lang = &Lang{"golang", "main.go", ".go", "perdocker/go:attach", "go run"}
