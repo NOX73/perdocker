@@ -3,7 +3,6 @@ package main
 import (
 	"./perd"
 	"flag"
-	"sync"
 )
 
 var httpPort string
@@ -11,8 +10,6 @@ var httpPort string
 func main() {
 	var rubyWorkers, nodejsWorkers int
 	var timeout int64
-	var w sync.WaitGroup
-	w.Add(1)
 
 	flag.StringVar(&httpPort, "port", "8080", "HTTP server port.")
 	flag.IntVar(&rubyWorkers, "ruby-workers", 1, "Count of ruby workers.")
@@ -23,10 +20,5 @@ func main() {
 	workers := map[string]int{"ruby": rubyWorkers, "nodejs": nodejsWorkers}
 	server := perd.NewServer(httpPort, workers, timeout)
 
-	go func() {
-		server.Run()
-		w.Done()
-	}()
-
-	w.Wait()
+	server.Run()
 }
