@@ -41,6 +41,12 @@ make run
 > is [this bug](https://github.com/dotcloud/docker/issues/1319). Bug
 > will be fixed only for 0.8.0 version of Docker. But compiled dev vesion
 > of docker you can find in `bin/` directory.
+> Yout can install latest docker version and then just replace
+> `/usr/bin/docker` with `./bin/docker` and restart service.
+
+> **NOTE:**
+> Perdocker expects that it can run `docker` command without sudo.
+> [For details](http://docs.docker.io/en/latest/use/basics/)
 
 ## Flags
 
