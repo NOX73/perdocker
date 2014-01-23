@@ -7,12 +7,13 @@ type Result interface {
 }
 
 func NewResult(out, err []byte, code int) Result {
-	return &result{string(out), string(err), code}
+	return &result{string(out), string(err), "", code}
 }
 
 type result struct {
 	StdOut     string `json:"stdout"`
 	StdErr     string `json:"stderr"`
+	Meta       string `json:"meta"`
 	StatusCode int    `json:"exitCode"`
 }
 

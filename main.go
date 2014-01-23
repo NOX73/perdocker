@@ -5,24 +5,20 @@ import (
 	"flag"
 )
 
-var httpPort string
-
 func main() {
-	var rubyWorkers int
-	var nodejsWorkers int
-	var golangWorkers int
 
-	var timeout int64
+	var httpListen = flag.String("listen", ":8080", "HTTP server bind to address & port. Ex: localhost:80 or :80")
 
-	flag.StringVar(&httpPort, "port", "8080", "HTTP server port.")
-	flag.IntVar(&rubyWorkers, "ruby-workers", 1, "Count of ruby workers.")
-	flag.IntVar(&nodejsWorkers, "nodejs-workers", 1, "Count of nodejs workers.")
-	flag.IntVar(&golangWorkers, "golang-workers", 1, "Count of go workers.")
-	flag.Int64Var(&timeout, "timeout", 30, "Max execution time.")
+	var rubyWorkers = *flag.Int("ruby-workers", 1, "Count of ruby workers.")
+	var nodejsWorkers = *flag.Int("nodejs-workers", 1, "Count of nodejs workers.")
+	var golangWorkers = *flag.Int("golang-workers", 1, "Count of golang workers.")
+
+	var timeout = *flag.Int("timeout", 30, "Max execution time.")
+
 	flag.Parse()
 
 	workers := map[string]int{"ruby": rubyWorkers, "nodejs": nodejsWorkers, "golang": golangWorkers}
-	server := perd.NewServer(httpPort, workers, timeout)
+	server := perd.NewServer(*httpListen, workers, int64(timeout))
 
 	server.Run()
 }
