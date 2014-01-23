@@ -16,7 +16,7 @@ type config struct {
 	listen string
 }
 
-func NewServer(listen string, workers map[string]int, timeout int64) Server {
+func NewServer(listen string, workers map[string]int64, timeout int64) Server {
 	runners := map[string]Runner{
 		"ruby":   NewRunner(Ruby, workers["ruby"], timeout),
 		"nodejs": NewRunner(Nodejs, workers["nodejs"], timeout),

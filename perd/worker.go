@@ -20,10 +20,11 @@ type worker struct {
 	MaxExecute time.Duration
 	Container  Container
 
-	in chan Command
+	in   chan Command
+	exit chan bool
 }
 
-func NewWorker(lang *Lang, id, timeout int64, in chan Command) (Worker, error) {
+func NewWorker(lang *Lang, id, timeout int64, in chan Command, exit chan bool) (Worker, error) {
 
 	container, err := NewContainer(id, lang)
 	if err != nil {
@@ -36,7 +37,8 @@ func NewWorker(lang *Lang, id, timeout int64, in chan Command) (Worker, error) {
 		Id:         id,
 		MaxExecute: time.Duration(timeout) * time.Second,
 
-		in: in,
+		in:   in,
+		exit: exit,
 	}
 
 	go w.Start()
@@ -52,8 +54,16 @@ func (w *worker) Start() {
 		return
 	}
 
+workerLoop:
 	for {
-		c := <-w.in
+
+		var c Command
+		select {
+		case c = <-w.in:
+		case <-w.exit:
+			break workerLoop
+		}
+
 		w.log("Precessing ...")
 
 		var err error
@@ -81,6 +91,7 @@ func (w *worker) Start() {
 			w.log("Container Clear error. Restarting ...")
 			w.Container.Restart()
 		}
+
 	}
 
 	w.Container.Stop()
