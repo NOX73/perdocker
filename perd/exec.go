@@ -25,12 +25,14 @@ type Exec struct {
 }
 
 func NewExec(out, err <-chan []byte, end []byte) *Exec {
-	return &Exec{
+	e := &Exec{
 		out:  out,
 		err:  err,
 		end:  end,
 		done: make(chan error, 1),
 	}
+	go e.Start()
+	return e
 }
 
 func (e *Exec) Wait(timeout time.Duration) error {

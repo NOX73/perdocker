@@ -9,11 +9,12 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"time"
 )
 
 type Container interface {
 	Init() error
-	Clear()
+	Clear() error
 	Start() error
 	Stop()
 	Restart() error
@@ -91,6 +92,14 @@ func NewContainer(id int64, lang *Lang) (Container, error) {
 	return c, nil
 }
 
+func (c *container) echoEnd() error {
+	var err error
+	_, err = c.inWriter.WriteString("echo " + string(c.end) + "$?\n")
+	_, err = c.inWriter.WriteString("echo " + string(c.end) + " 1>&2\n")
+	c.inWriter.Flush()
+	return err
+}
+
 func (c *container) Exec(file []byte) (*Exec, error) {
 	var err error
 
@@ -102,23 +111,12 @@ func (c *container) Exec(file []byte) (*Exec, error) {
 	in := c.inWriter
 
 	_, err = in.WriteString(c.command + " 3>&- \n")
+	err = c.echoEnd()
 	if err != nil {
 		return nil, err
 	}
-	_, err = in.WriteString("echo " + string(c.end) + "$?\n")
-	if err != nil {
-		return nil, err
-	}
-	_, err = in.WriteString("echo " + string(c.end) + " 1>&2\n")
-	if err != nil {
-		return nil, err
-	}
-
-	in.Flush()
 
 	exec := NewExec(c.outCh, c.errCh, c.end)
-
-	go exec.Start()
 
 	return exec, nil
 }
@@ -178,11 +176,17 @@ func (c *container) Restart() error {
 func (c *container) Init() error {
 	var err error
 	c.Remove()
+
 	err = c.Start()
 	if err != nil {
 		return err
 	}
-	c.Clear()
+
+	err = c.Clear()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -193,10 +197,20 @@ func (c *container) Remove() {
 	}
 }
 
-func (c *container) Clear() {
+func (c *container) Clear() error {
 	c.end = generateEnd()
 	//TODO: Fork detector
-	//TODO: Clear stdOut stdErr
+	return c.clearStd()
+}
+
+func (c *container) clearStd() error {
+	err := c.echoEnd()
+	if err != nil {
+		return err
+	}
+	exec := NewExec(c.outCh, c.errCh, c.end)
+
+	return exec.Wait(5 * time.Second)
 }
 
 func (c *container) rm() error {

@@ -76,7 +76,11 @@ func (w *worker) Start() {
 		}
 
 		w.log("Finished ...")
-		w.Container.Clear()
+
+		if w.Container.Clear() != nil {
+			w.log("Container Clear error.")
+			w.Container.Restart()
+		}
 	}
 
 	w.Container.Stop()
