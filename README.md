@@ -1,16 +1,16 @@
 Perdocker
 ====
 
-Evaluate code in differnet languages inside docker containers.
+Evaluate code in different languages inside docker containers.
 
 ## Langs
 
-Currently supported languages:
+Currently supported languages are:
 
 - ruby (2.1.0)
 - javascript (nodejs 0.10.24)
 
-Cooming soon: 
+Coming soon:
 
 - golang
 
@@ -37,16 +37,16 @@ make run
 ```
 
 > **NOTE:**
-> Perdocker correctly works only with latest dev Docker version. Cause
-> is [this bug](https://github.com/dotcloud/docker/issues/1319). Bug
-> will be fixed only for 0.8.0 version of Docker. But compiled dev vesion
-> of docker you can find in `bin/` directory.
-> Yout can install latest docker version and then just replace
+> Perdocker correctly works only with the latest dev Docker version. Caused by
+> [this bug](https://github.com/dotcloud/docker/issues/1319). Bug
+> will be fixed in 0.8.0 version. You can find compiled dev version
+> of docker at `bin/` directory.
+> You can install latest docker version and then just replace
 > `/usr/bin/docker` with `./bin/docker` and restart service.
 
 > **NOTE:**
-> Perdocker expects that it can run `docker` command without sudo.
-> [For details](http://docs.docker.io/en/latest/use/basics/)
+> Perdocker expects that it will be able to run `docker` command without sudo.
+> [Details](http://docs.docker.io/en/latest/use/basics/)
 
 ## Flags
 
@@ -54,7 +54,7 @@ make run
 ./bin/perdocker -port 80 -ruby-workers 5 -nodejs-workers 5 -timeout 5
 ```
 
-## Defaluts
+## Defaults
 
 - port 8080
 - 1 ruby worker
@@ -63,7 +63,7 @@ make run
 
 ## Coming soon
 
-- timouts per eval.
+- timeouts per eval.
 - many language support (golang, php, C, C++, python and something else).
 - improvement run process.
 - start & attach to container instead of run it per request.
