@@ -18,11 +18,10 @@ Cooming soon:
 
 ```bash
 curl -POST -d "[1,2,3].each do |a| puts a*a; end;" 'http://localhost:8080/ruby'
-
-{"std_out":"1\n4\n9\n","std_err":"","code":0}
+{"stdout":"1\n4\n9\n","stderr":"","exitCode":0}
 
 curl -POST -d "var a = 6; a += 10; console.log(a)" 'http://localhost:8080/nodejs'
-{"std_out":"16\n","std_err":"","code":0}
+{"stdout":"16\n","stderr":"","exitCode":0}
 ```
 
 ## Install
@@ -42,9 +41,6 @@ make run
 > is [this bug](https://github.com/dotcloud/docker/issues/1319). Bug
 > will be fixed only for 0.8.0 version of Docker. But compiled dev vesion
 > of docker you can find in `bin/` directory.
-
-Before run you may be necessary to rebuild perdocker. 
-Just run `make build`.
 
 ## Flags
 
