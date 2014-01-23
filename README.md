@@ -51,12 +51,12 @@ make run
 ## Flags
 
 ```bash
-./bin/perdocker -port 80 -ruby-workers 5 -nodejs-workers 5 -golang-workers 5 -timeout 5
+./bin/perdocker -listen 127.0.0.1:80 -ruby-workers 5 -nodejs-workers 5 -golang-workers 5 -timeout 5
 ```
 
 ## Defaults
 
-- port 8080
+- listen :8080
 - 1 ruby worker
 - 1 nodejs worker
 - 1 go worker
