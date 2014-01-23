@@ -14,14 +14,18 @@ Currently supported languages are:
 ## API
 
 ```bash
-curl -POST -d "[1,2,3].each do |a| puts a*a; end;" 'http://localhost:8080/ruby'
+curl -POST -d "[1,2,3].each do |a| puts a*a; end;" 'http://localhost:8080/api/evaluate/ruby'
 {"stdout":"1\n4\n9\n","stderr":"","exitCode":0}
 
-curl -POST -d "var a = 6; a += 10; console.log(a)" 'http://localhost:8080/nodejs'
+curl -POST -d "var a = 6; a += 10; console.log(a)" 'http://localhost:8080/api/evaluate/nodejs'
 {"stdout":"16\n","stderr":"","exitCode":0}
 
-curl -POST -d "package main; import \"fmt\" ; func main() { fmt.Println(1+1) }" 'http://localhost:8080/go'
+curl -POST -d "package main; import \"fmt\" ; func main() { fmt.Println(1+1) }" 'http://localhost:8080/api/evaluate/golang'
 {"stdout":"2\n","stderr":"","exitCode":0}
+
+curl -POST -d '{"language":"ruby", "code":"puts 1"}' 'http://localhost:8080/api/evaluate'
+{"stdout":"1\n","stderr":"","exitCode":0}
+
 ```
 
 ## Install
