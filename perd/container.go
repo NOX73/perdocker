@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"os/exec"
 	"strconv"
@@ -80,8 +81,6 @@ func NewContainer(id int64, lang *Lang) (Container, error) {
 		tmpGuest: tmpGuest,
 
 		command: lang.RunCommand(fileGuest),
-
-		end: generateEnd(),
 	}
 
 	err := os.MkdirAll(c.tmpHost, 0755)
@@ -179,6 +178,7 @@ func (c *container) Restart() {
 func (c *container) Init() {
 	c.Remove()
 	c.Start()
+	c.Clear()
 }
 
 func (c *container) Remove() {
@@ -189,9 +189,9 @@ func (c *container) Remove() {
 }
 
 func (c *container) Clear() {
+	c.end = generateEnd()
 	//TODO: Fork detector
 	//TODO: Clear stdOut stdErr
-	//TODO: Generate end
 }
 
 func (c *container) rm() error {
@@ -227,8 +227,18 @@ func readLinesToChannel(r *bufio.Reader, ch chan []byte) {
 	}
 }
 
+var endChars []byte = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz0123456789")
+var endLen = 30
+
 func generateEnd() []byte {
-	return []byte("asdfasdfasdfasdfgfsdfbewrv")
+	end := make([]byte, endLen)
+
+	for i := 0; i < endLen; i++ {
+		r := rand.Intn(len(endChars))
+		end[i] = endChars[r]
+	}
+
+	return end
 }
 
 func (c *container) sharedPaths() string {
