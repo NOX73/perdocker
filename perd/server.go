@@ -58,6 +58,7 @@ func (s *server) langHandler(w http.ResponseWriter, r *http.Request, lang string
 	res, err := s.eval(lang, string(body))
 
 	if err != nil {
+		log.Println(err)
 		return
 	}
 
@@ -89,6 +90,7 @@ func (s *server) evaluateHandler(w http.ResponseWriter, r *http.Request) {
 	body, err = ioutil.ReadAll(r.Body)
 
 	if err != nil {
+		log.Println(err)
 		return
 	}
 
@@ -96,12 +98,14 @@ func (s *server) evaluateHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, js)
 
 	if err != nil {
+		log.Println(err)
 		return
 	}
 
 	res, err = s.eval(js.Lang, js.Code)
 
 	if err != nil {
+		log.Println(err)
 		return
 	}
 
