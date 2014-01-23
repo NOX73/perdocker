@@ -7,7 +7,7 @@ import (
 
 func main() {
 
-	var httpListen = flag.String("listen", ":8080", "HTTP server bind to address & port. Ex: localhost:80 or :80")
+	var httpListen = *flag.String("listen", ":8080", "HTTP server bind to address & port. Ex: localhost:80 or :80")
 
 	var rubyWorkers = *flag.Int("ruby-workers", 1, "Count of ruby workers.")
 	var nodejsWorkers = *flag.Int("nodejs-workers", 1, "Count of nodejs workers.")
@@ -18,7 +18,7 @@ func main() {
 	flag.Parse()
 
 	workers := map[string]int{"ruby": rubyWorkers, "nodejs": nodejsWorkers, "golang": golangWorkers}
-	server := perd.NewServer(*httpListen, workers, int64(timeout))
+	server := perd.NewServer(httpListen, workers, int64(timeout))
 
 	server.Run()
 }
