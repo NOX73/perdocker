@@ -9,10 +9,7 @@ Currently supported languages are:
 
 - ruby (2.1.0)
 - javascript (nodejs 0.10.24)
-
-Coming soon:
-
-- golang
+- golang (1.2)
 
 ## API
 
@@ -22,6 +19,9 @@ curl -POST -d "[1,2,3].each do |a| puts a*a; end;" 'http://localhost:8080/ruby'
 
 curl -POST -d "var a = 6; a += 10; console.log(a)" 'http://localhost:8080/nodejs'
 {"stdout":"16\n","stderr":"","exitCode":0}
+
+curl -POST -d "package main; import \"fmt\" ; func main() { fmt.Println(1+1) }" 'http://localhost:8080/go'
+{"stdout":"2\n","stderr":"","exitCode":0}
 ```
 
 ## Install
@@ -51,7 +51,7 @@ make run
 ## Flags
 
 ```bash
-./bin/perdocker -port 80 -ruby-workers 5 -nodejs-workers 5 -timeout 5
+./bin/perdocker -port 80 -ruby-workers 5 -nodejs-workers 5 -golang-workers 5 -timeout 5
 ```
 
 ## Defaults
@@ -59,12 +59,12 @@ make run
 - port 8080
 - 1 ruby worker
 - 1 nodejs worker
-- timeout 60 seconds
+- 1 go worker
+- timeout 30 seconds
 
 ## Coming soon
 
-- timeouts per eval.
-- many language support (golang, php, C, C++, python and something else).
+- timouts per eval.
+- many language support (php, C, C++, python and something else).
 - improvement run process.
 - start & attach to container instead of run it per request.
-
