@@ -64,21 +64,21 @@ func (w *worker) Start() {
 		err = exec.Wait(w.MaxExecute)
 
 		if err != nil {
-			w.log("Timeout kill ...")
+			w.log("Timeout kill. Restarting ...")
 			c.Response(exec.StdOut, exec.StdErr, 137)
 
 			// TODO: kill proccess instead restart container
 			// it's required docker 0.8.0 feature for run command inside exists container.
-
 			w.Container.Restart()
-		} else {
-			c.Response(exec.StdOut, exec.StdErr, exec.ExitCode)
+
+			continue
 		}
 
+		c.Response(exec.StdOut, exec.StdErr, exec.ExitCode)
 		w.log("Finished ...")
 
 		if w.Container.Clear() != nil {
-			w.log("Container Clear error.")
+			w.log("Container Clear error. Restarting ...")
 			w.Container.Restart()
 		}
 	}
