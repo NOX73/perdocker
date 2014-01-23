@@ -200,6 +200,7 @@ func (c *container) waitStart () error {
 }
 
 func readLinesToChannel(r *bufio.Reader, ch chan []byte) {
+  defer func() { recover() }()
   for {
     line, err := r.ReadBytes(eol)
     if err != nil { break }
