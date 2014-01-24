@@ -7,10 +7,14 @@ import (
 )
 
 var (
-	ErrExecTimout = errors.New("Execution timeout.")
-	ErrReadStds   = errors.New("Read std terminated.")
+	// ErrExecTimout occurs when the command runs out of maximum execution time
+	ErrExecTimout = errors.New("execution timeout")
+
+	// ErrReadStds throwed if std read has been terminated
+	ErrReadStds = errors.New("std read terminated")
 )
 
+// Exec is a struct which collects stdout/stderr outputs from commands.
 type Exec struct {
 	out <-chan []byte
 	err <-chan []byte
@@ -24,6 +28,7 @@ type Exec struct {
 	ExitCode int
 }
 
+// NewExec returns new Exec
 func NewExec(out, err <-chan []byte, end []byte) *Exec {
 	e := &Exec{
 		out:  out,
@@ -35,6 +40,7 @@ func NewExec(out, err <-chan []byte, end []byte) *Exec {
 	return e
 }
 
+// Wait returns ErrExecTimout error if command runs out maximum execution time.
 func (e *Exec) Wait(timeout time.Duration) error {
 	select {
 	case err := <-e.done:
@@ -44,6 +50,7 @@ func (e *Exec) Wait(timeout time.Duration) error {
 	}
 }
 
+// Start collects stdout/stderr output and extract exit code.
 func (e *Exec) Start() {
 
 	for {

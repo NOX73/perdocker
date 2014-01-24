@@ -11,6 +11,7 @@ const (
 	newWorkerTimeout = 1 * time.Second
 )
 
+// Runner run several workers
 type Runner interface {
 	RunWorker()
 	Eval(string) Result
@@ -28,9 +29,10 @@ type runner struct {
 	Timeout         int64
 }
 
-var workerId int64
-var workerIdLock sync.Mutex
+var workerID int64
+var workerIDLock sync.Mutex
 
+// NewRunner returns new Runner
 func NewRunner(lang *Lang, workers int64, timeout int64) *runner {
 	r := &runner{
 		Lang: lang,
@@ -43,7 +45,6 @@ func NewRunner(lang *Lang, workers int64, timeout int64) *runner {
 		Timeout:         timeout,
 	}
 	go r.Start()
-	return r
 }
 
 func (r *runner) Start() {
@@ -97,10 +98,10 @@ func (r *runner) StopWorker() {
 }
 
 func (r *runner) RunWorker() {
-	workerIdLock.Lock()
-	workerId++
-	wid := workerId
-	workerIdLock.Unlock()
+	workerIDLock.Lock()
+	workerID++
+	wid := workerID
+	workerIDLock.Unlock()
 
 	r.workersCount++
 

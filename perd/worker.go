@@ -9,6 +9,8 @@ const (
 	eol byte = 10
 )
 
+// Worker is the process who listens for commands to run and executes them inside the container.
+// Note that each worker must create their own container.
 type Worker interface {
 	Start()
 }
@@ -16,7 +18,7 @@ type Worker interface {
 // This worker do not run container per request.
 type worker struct {
 	Lang       *Lang
-	Id         int64
+	ID         int64
 	MaxExecute time.Duration
 	Container  Container
 
@@ -24,6 +26,7 @@ type worker struct {
 	exit chan bool
 }
 
+// NewWorker returns new Worker
 func NewWorker(lang *Lang, id, timeout int64, in chan Command, exit chan bool) (Worker, error) {
 
 	container, err := NewContainer(id, lang)
@@ -34,7 +37,7 @@ func NewWorker(lang *Lang, id, timeout int64, in chan Command, exit chan bool) (
 	w := &worker{
 		Container:  container,
 		Lang:       lang,
-		Id:         id,
+		ID:         id,
 		MaxExecute: time.Duration(timeout) * time.Second,
 
 		in:   in,
@@ -101,7 +104,7 @@ workerLoop:
 
 func (w *worker) log(s ...interface{}) {
 	var params = make([]interface{}, 0)
-	params = append(params, w.Lang.Name, "worker", w.Id, "\t")
+	params = append(params, w.Lang.Name, "worker", w.ID, "\t")
 	params = append(params, s...)
 	log.Println(params...)
 }
