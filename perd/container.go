@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// Container represents Docker container.
 type Container interface {
 	Init() error
 	Clear() error
@@ -23,17 +24,21 @@ type Container interface {
 }
 
 const (
-	MemLimit    = "10m"
-	CpuLimit    = "1"
-	WaitStarSec = 5
+	// MemLimit sets allowed memory limit
+	MemLimit = "10m"
+
+	// CPULimit sets allowed CPU count
+	CPULimit = "1"
 )
 
 var (
-	ErrCantStart = errors.New("Cant't start container.")
+	// ErrCantStart indicates fail in starting particular container (detailed error
+	// will be printed to the stdout.
+	ErrCantStart = errors.New("can't start container")
 )
 
 type container struct {
-	Id   int64
+	ID   int64
 	Lang *Lang
 
 	cmd *exec.Cmd
@@ -62,6 +67,7 @@ type container struct {
 	errCh chan []byte
 }
 
+// NewContainer returns new Container
 func NewContainer(id int64, lang *Lang) (Container, error) {
 
 	name := "perdoker_" + lang.Name + "_" + strconv.FormatInt(id, 10)
@@ -70,7 +76,7 @@ func NewContainer(id int64, lang *Lang) (Container, error) {
 	fileGuest := tmpGuest + lang.ExecutableFile()
 
 	c := &container{
-		Id:   id,
+		ID:   id,
 		Lang: lang,
 
 		name: name,
@@ -124,7 +130,7 @@ func (c *container) Exec(file []byte) (*Exec, error) {
 func (c *container) Start() error {
 	var err error
 
-	cmd := exec.Command("docker", "run", "-m", MemLimit, "-c", CpuLimit, "-i", "-v", c.sharedPaths(), "-name="+c.name, c.Lang.Image, "/bin/bash", "-l")
+	cmd := exec.Command("docker", "run", "-m", MemLimit, "-c", CPULimit, "-i", "-v", c.sharedPaths(), "-name="+c.name, c.Lang.Image, "/bin/bash", "-l")
 	c.cmd = cmd
 
 	c.stdin, _ = cmd.StdinPipe()

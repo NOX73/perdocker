@@ -2,10 +2,12 @@ package perd
 
 import "encoding/json"
 
+// Result is an encoded json which stores stdout/stderr outputs and exit code.
 type Result interface {
 	Bytes() []byte
 }
 
+// NewResult returns new Result
 func NewResult(out, err []byte, code int) Result {
 	return &result{string(out), string(err), "", code}
 }

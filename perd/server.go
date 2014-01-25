@@ -8,6 +8,8 @@ import (
 	"net/http"
 )
 
+// Server is a simple http server who listens for incoming requests.
+// When request comes, he evals its body using Runner
 type Server interface {
 	Run()
 }
@@ -16,13 +18,13 @@ type config struct {
 	listen string
 }
 
+// NewServer returns new server
 func NewServer(listen string, workers map[string]int64, timeout int64) Server {
 	runners := map[string]Runner{
 		"ruby":   NewRunner(Ruby, workers["ruby"], timeout),
 		"nodejs": NewRunner(Nodejs, workers["nodejs"], timeout),
 		"golang": NewRunner(Golang, workers["golang"], timeout),
 	}
-
 	return &server{&config{listen}, runners}
 }
 

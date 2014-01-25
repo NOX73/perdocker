@@ -1,10 +1,13 @@
 package perd
 
+// Command is an interface that must be implemented to in order to process
+// commands.
 type Command interface {
 	Response([]byte, []byte, int)
 	Command() string
 }
 
+// NewCommand returns new Command
 func NewCommand(c string, r chan Result) Command {
 	return &command{c, r}
 }
