@@ -32,3 +32,6 @@ var Nodejs = &Lang{"nodejs", "index.js", ".js", "perdocker/nodejs:attach", "node
 
 // Golang settings
 var Golang = &Lang{"golang", "main.go", ".go", "perdocker/go:attach", "go run"}
+
+// Python settings
+var Python = &Lang{"python", "run.py", ".py", "perdocker/python:attach", "python"}
