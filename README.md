@@ -3,6 +3,11 @@ Perdocker
 
 Evaluate code in different languages inside docker containers.
 
+### Status
+
+This project steel under active development. So feel free to open issue
+if your have a problem.
+
 ## Langs
 
 Currently supported languages are:
