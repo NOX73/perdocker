@@ -10,6 +10,7 @@ Currently supported languages are:
 - ruby (2.1.0)
 - javascript (nodejs 0.10.24)
 - golang (1.2)
+- python (2.7.3)
 
 ## API
 
@@ -22,6 +23,9 @@ curl -POST -d "var a = 6; a += 10; console.log(a)" 'http://localhost:8080/api/ev
 
 curl -POST -d "package main; import \"fmt\" ; func main() { fmt.Println(1+1) }" 'http://localhost:8080/api/evaluate/golang'
 {"stdout":"2\n","stderr":"","exitCode":0}
+
+curl -POST -d "print(\"Hello, World\")" 'http://localhost:8080/api/evaluate/python'
+{"stdout":"Hello, World\n","stderr":"","exitCode":0}
 
 curl -POST -d '{"language":"ruby", "code":"puts 1"}' 'http://localhost:8080/api/evaluate'
 {"stdout":"1\n","stderr":"","exitCode":0}
@@ -64,11 +68,12 @@ make run
 - 1 ruby worker
 - 1 nodejs worker
 - 1 go worker
+- 1 python worker
 - timeout 30 seconds
 
 ## Coming soon
 
 - timouts per eval.
-- many language support (php, C, C++, python and something else).
+- many language support (php, C, C++ and something else).
 - improvement run process.
 - start & attach to container instead of run it per request.
