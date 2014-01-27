@@ -41,4 +41,4 @@ var Golang = &Lang{"golang", "main.go", ".go", "perdocker/go:attach", "go run %s
 var Python = &Lang{"python", "run.py", ".py", "perdocker/python:attach", "python %s"}
 
 // C settings
-var C = &Lang{"c", "a.c", ".c", "perdocker/python:attach", "gcc -o a %s && ./a"}
+var C = &Lang{"c", "a.c", ".c", "perdocker/c:attach", "gcc -o a %s && ./a"}
