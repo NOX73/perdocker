@@ -48,7 +48,7 @@ func (s *server) Run() {
 	http.HandleFunc("/api/evaluate/nodejs", s.nodejsHandler)
 	http.HandleFunc("/api/evaluate/golang", s.golangHandler)
 	http.HandleFunc("/api/evaluate/python", s.pythonHandler)
-	http.HandleFunc("/api/evaluate/c", s.pythonHandler)
+	http.HandleFunc("/api/evaluate/c", s.cHandler)
 
 	log.Println("Listen http on", s.config.listen)
 	http.ListenAndServe(s.config.listen, nil)
