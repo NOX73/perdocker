@@ -1,5 +1,9 @@
 package perd
 
+import (
+	"fmt"
+)
+
 // Lang is a struct to store language settings (name, Docker image, command to exec code, etc.).
 type Lang struct {
 	Name     string
@@ -16,7 +20,7 @@ func (l *Lang) uniqFileName() string {
 // RunCommand forms command using Lang.Command and a given string.
 // Example: `ruby /tmp/perdocker/run.rb`
 func (l *Lang) RunCommand(filePath string) string {
-	return l.Command + " " + filePath
+	return fmt.Sprintf(l.Command, filePath)
 }
 
 // ExecutableFile returns filename, which will be used to store user's code
@@ -25,13 +29,16 @@ func (l *Lang) ExecutableFile() string {
 }
 
 // Ruby language settings
-var Ruby = &Lang{"ruby", "run.rb", ".rb", "perdocker/ruby:attach", "ruby"}
+var Ruby = &Lang{"ruby", "run.rb", ".rb", "perdocker/ruby:attach", "ruby %s"}
 
 // Nodejs settings
-var Nodejs = &Lang{"nodejs", "index.js", ".js", "perdocker/nodejs:attach", "node"}
+var Nodejs = &Lang{"nodejs", "index.js", ".js", "perdocker/nodejs:attach", "node %s"}
 
 // Golang settings
-var Golang = &Lang{"golang", "main.go", ".go", "perdocker/go:attach", "go run"}
+var Golang = &Lang{"golang", "main.go", ".go", "perdocker/go:attach", "go run %s"}
 
 // Python settings
-var Python = &Lang{"python", "run.py", ".py", "perdocker/python:attach", "python"}
+var Python = &Lang{"python", "run.py", ".py", "perdocker/python:attach", "python %s"}
+
+// C settings
+var C = &Lang{"c", "a.c", ".c", "perdocker/python:attach", "gcc -o a %s && ./a"}
