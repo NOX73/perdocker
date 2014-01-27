@@ -45,6 +45,7 @@ func NewRunner(lang *Lang, workers int64, timeout int64) *runner {
 		Timeout:         timeout,
 	}
 	go r.Start()
+	return r
 }
 
 func (r *runner) Start() {
