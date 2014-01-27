@@ -25,6 +25,7 @@ func NewServer(listen string, workers map[string]int64, timeout int64) Server {
 		"nodejs": NewRunner(Nodejs, workers["nodejs"], timeout),
 		"golang": NewRunner(Golang, workers["golang"], timeout),
 		"python": NewRunner(Python, workers["python"], timeout),
+		"c":      NewRunner(C, workers["c"], timeout),
 	}
 	return &server{&config{listen}, runners}
 }
@@ -47,6 +48,7 @@ func (s *server) Run() {
 	http.HandleFunc("/api/evaluate/nodejs", s.nodejsHandler)
 	http.HandleFunc("/api/evaluate/golang", s.golangHandler)
 	http.HandleFunc("/api/evaluate/python", s.pythonHandler)
+	http.HandleFunc("/api/evaluate/c", s.pythonHandler)
 
 	log.Println("Listen http on", s.config.listen)
 	http.ListenAndServe(s.config.listen, nil)
@@ -83,6 +85,10 @@ func (s *server) golangHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) pythonHandler(w http.ResponseWriter, r *http.Request) {
 	s.langHandler(w, r, "python")
+}
+
+func (s *server) cHandler(w http.ResponseWriter, r *http.Request) {
+	s.langHandler(w, r, "c")
 }
 
 type RequestJson struct {
