@@ -46,6 +46,7 @@ func (s *server) Run() {
 
 	http.HandleFunc("/api/evaluate/ruby", s.rubyHandler)
 	http.HandleFunc("/api/evaluate/nodejs", s.nodejsHandler)
+	http.HandleFunc("/api/evaluate/javascript", s.nodejsHandler)
 	http.HandleFunc("/api/evaluate/golang", s.golangHandler)
 	http.HandleFunc("/api/evaluate/python", s.pythonHandler)
 	http.HandleFunc("/api/evaluate/c", s.cHandler)
