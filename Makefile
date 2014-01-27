@@ -13,7 +13,7 @@ run-perdocker:
 build:
 	go build && mv perdocker ./bin/perdocker && chmod +x ./bin/perdocker
 
-build-images: build-image-ruby build-image-nodejs build-image-go build-image-python
+build-images: build-image-ruby build-image-nodejs build-image-go build-image-python build-image-c
 
 build-image-ruby:
 	docker build -rm -t="perdocker/ruby:attach" ./images/ruby/
@@ -23,8 +23,10 @@ build-image-go:
 	docker build -rm -t="perdocker/go:attach" ./images/go/
 build-image-python:
 	docker build -rm -t="perdocker/python:attach" ./images/python/
+build-image-c:
+	docker build -rm -t="perdocker/c:attach" ./images/c/
 
-pull-images: pull-image-ruby pull-image-nodejs pull-image-go pull-image-python
+pull-images: pull-image-ruby pull-image-nodejs pull-image-go pull-image-python pull-image-c
 
 pull-image-ruby:
 	docker pull perdocker/ruby
@@ -34,4 +36,6 @@ pull-image-go:
 	docker pull perdocker/go
 pull-image-python:	
 	docker pull perdocker/python
+pull-image-c:	
+	docker pull perdocker/c
 
