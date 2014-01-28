@@ -1,4 +1,4 @@
-install: pull-images
+install: pull-image
 
 docker-stop:
 	sudo kill -QUIT `cat /var/run/docker.pid`
@@ -13,7 +13,10 @@ run-perdocker:
 build:
 	go build && mv perdocker ./bin/perdocker && chmod +x ./bin/perdocker
 
-build-images: build-image-ruby build-image-nodejs build-image-go build-image-python build-image-c build-image-php
+build-image: 
+	docker build -rm -t="perdocker/universal:latest" ./images/universal/
+
+build-images-lang: build-image-ruby build-image-nodejs build-image-go build-image-python build-image-c build-image-php
 
 build-image-ruby:
 	docker build -rm -t="perdocker/ruby:attach" ./images/ruby/
@@ -28,7 +31,9 @@ build-image-c:
 build-image-php:
 	docker build -rm -t="perdocker/php:attach" ./images/php/
 
-pull-images: pull-image-ruby pull-image-nodejs pull-image-go pull-image-python pull-image-c pull-image-php
+pull-image: 
+	docker pull perdocker/universal
+pull-images-lang: pull-image-ruby pull-image-nodejs pull-image-go pull-image-python pull-image-c pull-image-php
 
 pull-image-ruby:
 	docker pull perdocker/ruby
