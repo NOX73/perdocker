@@ -16,6 +16,9 @@ Currently supported languages are:
 - javascript (nodejs 0.10.24)
 - golang (1.2)
 - python (2.7.3)
+- C
+- C++
+- PHP
 
 ## API
 
@@ -35,6 +38,15 @@ curl -POST -d "print(\"Hello, World\")" 'http://localhost:8080/api/evaluate/pyth
 curl -POST -d '{"language":"ruby", "code":"puts 1"}' 'http://localhost:8080/api/evaluate'
 {"stdout":"1\n","stderr":"","exitCode":0}
 
+curl  http://192.168.1.2:8080/api/evaluate/cpp -d "
+#include <iostream>
+
+int main()
+{
+std::cout << \"Hello\"; return 0;
+}
+"
+{"stdout":"Hello\n","stderr":"","meta":"","exitCode":0}
 ```
 
 ## Install
@@ -64,21 +76,27 @@ make run
 ## Flags
 
 ```bash
-./bin/perdocker -listen 127.0.0.1:80 -ruby-workers 5 -nodejs-workers 5 -golang-workers 5 -timeout 5
+$ ./bin/perdocker -h
+Usage of ./bin/perdocker:
+  -c-workers=1: Count of C workers.
+  -cpp-workers=1: Count of C++ workers.
+  -golang-workers=1: Count of golang workers.
+  -listen=":8080": HTTP server bind to address & port. Ex: localhost:80 or :80
+  -nodejs-workers=1: Count of nodejs workers.
+  -php-workers=1: Count of PHP workers.
+  -python-workers=1: Count of python workers.
+  -ruby-workers=1: Count of ruby workers.
+  -timeout=30: Max execution time.
 ```
 
 ## Defaults
 
 - listen :8080
-- 1 ruby worker
-- 1 nodejs worker
-- 1 go worker
-- 1 python worker
+- 1 worker per longuage.
 - timeout 30 seconds
 
 ## Coming soon
 
-- timouts per eval.
-- many language support (php, C, C++ and something else).
-- improvement run process.
-- start & attach to container instead of run it per request.
+- run process inside exist docker container. Required docker 0.8.0.
+- fork detector.
+- restart container after some amount evals.
