@@ -18,7 +18,7 @@ Currently supported languages are:
 - python (2.7.3)
 - C
 - C++
-- PHP
+- PHP (5.3.10)
 
 ## API
 
