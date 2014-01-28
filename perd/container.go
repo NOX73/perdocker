@@ -100,7 +100,7 @@ func NewContainer(id int64, lang *Lang) (Container, error) {
 
 func (c *container) echoEnd() error {
 	var err error
-	_, err = c.inWriter.WriteString("echo; echo " + string(c.end) + "$?\n")
+	_, err = c.inWriter.WriteString("echo \"\n" + string(c.end) + "$?\"\n")
 	_, err = c.inWriter.WriteString("echo " + string(c.end) + " 1>&2\n")
 	c.inWriter.Flush()
 	return err
