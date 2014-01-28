@@ -25,7 +25,7 @@ type Container interface {
 
 const (
 	// MemLimit sets allowed memory limit
-	MemLimit = "10m"
+	MemLimit = "20m"
 
 	// CPULimit sets allowed CPU count
 	CPULimit = "1"
