@@ -43,5 +43,8 @@ var Python = &Lang{"python", "run.py", ".py", "perdocker/python:attach", "python
 // C settings
 var C = &Lang{"c", "a.c", ".c", "perdocker/c:attach", "gcc -o /tmp/a %s && /tmp/a"}
 
+// CPP settings
+var CPP = &Lang{"cpp", "a.cpp", ".cpp", "perdocker/c:attach", "g++ -o /tmp/a %s && /tmp/a"}
+
 // PHP settings
 var PHP = &Lang{"php", "index.php", ".php", "perdocker/php:attach", "php %s"}
