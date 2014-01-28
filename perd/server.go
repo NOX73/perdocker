@@ -20,12 +20,15 @@ type config struct {
 
 // NewServer returns new server
 func NewServer(listen string, workers map[string]int64, timeout int64) Server {
+	jsRunner := NewRunner(Nodejs, workers["nodejs"], timeout)
 	runners := map[string]Runner{
-		"ruby":   NewRunner(Ruby, workers["ruby"], timeout),
-		"nodejs": NewRunner(Nodejs, workers["nodejs"], timeout),
-		"golang": NewRunner(Golang, workers["golang"], timeout),
-		"python": NewRunner(Python, workers["python"], timeout),
-		"c":      NewRunner(C, workers["c"], timeout),
+		"ruby":       NewRunner(Ruby, workers["ruby"], timeout),
+		"nodejs":     jsRunner,
+		"javascript": jsRunner,
+		"golang":     NewRunner(Golang, workers["golang"], timeout),
+		"python":     NewRunner(Python, workers["python"], timeout),
+		"c":          NewRunner(C, workers["c"], timeout),
+		"php":        NewRunner(PHP, workers["php"], timeout),
 	}
 	return &server{&config{listen}, runners}
 }
@@ -50,6 +53,7 @@ func (s *server) Run() {
 	http.HandleFunc("/api/evaluate/golang", s.golangHandler)
 	http.HandleFunc("/api/evaluate/python", s.pythonHandler)
 	http.HandleFunc("/api/evaluate/c", s.cHandler)
+	http.HandleFunc("/api/evaluate/php", s.phpHandler)
 
 	log.Println("Listen http on", s.config.listen)
 	http.ListenAndServe(s.config.listen, nil)
@@ -90,6 +94,10 @@ func (s *server) pythonHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) cHandler(w http.ResponseWriter, r *http.Request) {
 	s.langHandler(w, r, "c")
+}
+
+func (s *server) phpHandler(w http.ResponseWriter, r *http.Request) {
+	s.langHandler(w, r, "php")
 }
 
 type RequestJson struct {

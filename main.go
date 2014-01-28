@@ -12,13 +12,22 @@ var nodejsWorkers = flag.Int64("nodejs-workers", 1, "Count of nodejs workers.")
 var golangWorkers = flag.Int64("golang-workers", 1, "Count of golang workers.")
 var pythonWorkers = flag.Int64("python-workers", 1, "Count of python workers.")
 var cWorkers = flag.Int64("c-workers", 1, "Count of C workers.")
+var phpWorkers = flag.Int64("php-workers", 1, "Count of PHP workers.")
 
 var timeout = flag.Int64("timeout", 30, "Max execution time.")
 
 func main() {
 	flag.Parse()
 
-	workers := map[string]int64{"ruby": *rubyWorkers, "nodejs": *nodejsWorkers, "golang": *golangWorkers, "python": *pythonWorkers, "c": *cWorkers}
+	workers := map[string]int64{
+		"ruby":   *rubyWorkers,
+		"nodejs": *nodejsWorkers,
+		"golang": *golangWorkers,
+		"python": *pythonWorkers,
+		"c":      *cWorkers,
+		"php":    *phpWorkers,
+	}
+
 	server := perd.NewServer(*httpListen, workers, *timeout)
 
 	server.Run()
