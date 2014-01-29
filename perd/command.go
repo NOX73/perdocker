@@ -5,16 +5,18 @@ package perd
 type Command interface {
 	Response([]byte, []byte, int)
 	Command() string
+	Language() *Lang
 }
 
 // NewCommand returns new Command
-func NewCommand(c string, r chan Result) Command {
-	return &command{c, r}
+func NewCommand(lang *Lang, c string, r chan Result) Command {
+	return &command{c, r, lang}
 }
 
 type command struct {
 	command         string
 	responseChannel chan Result
+	lang            *Lang
 }
 
 func (c *command) Response(out, err []byte, code int) {
@@ -23,4 +25,8 @@ func (c *command) Response(out, err []byte, code int) {
 
 func (c *command) Command() string {
 	return c.command
+}
+
+func (c *command) Language() *Lang {
+	return c.lang
 }

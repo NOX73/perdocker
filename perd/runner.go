@@ -14,7 +14,7 @@ const (
 // Runner run several workers
 type Runner interface {
 	RunWorker()
-	Eval(string) Result
+	Eval(*Lang, string) Result
 }
 
 type runner struct {
@@ -33,7 +33,7 @@ var workerID int64
 var workerIDLock sync.Mutex
 
 // NewRunner returns new Runner
-func NewRunner(lang *Lang, workers int64, timeout int64) *runner {
+func NewRunner(lang *Lang, workers int64, timeout int64) Runner {
 	r := &runner{
 		Lang: lang,
 
@@ -82,9 +82,9 @@ func (r *runner) sendCommandToWorker(c Command) {
 
 }
 
-func (r *runner) Eval(command string) Result {
+func (r *runner) Eval(lang *Lang, code string) Result {
 	respCh := make(chan Result)
-	r.newEval <- NewCommand(command, respCh)
+	r.newEval <- NewCommand(lang, code, respCh)
 	return <-respCh
 }
 

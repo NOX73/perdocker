@@ -19,7 +19,7 @@ type Container interface {
 	Start() error
 	Stop()
 	Restart() error
-	Exec([]byte) (*Exec, error)
+	Exec(Command) (*Exec, error)
 	Remove()
 }
 
@@ -45,14 +45,10 @@ type container struct {
 
 	name string
 
-	end     []byte
-	command string
+	end []byte
 
 	tmpHost  string
 	tmpGuest string
-
-	fileHost  string
-	fileGuest string
 
 	stdin  io.WriteCloser
 	stdout io.ReadCloser
@@ -70,10 +66,9 @@ type container struct {
 // NewContainer returns new Container
 func NewContainer(id int64, lang *Lang) (Container, error) {
 
-	name := "perdoker_" + lang.Name + "_" + strconv.FormatInt(id, 10)
-	tmpHost := "/tmp/perdocker/" + lang.Name + "/" + name + "/"
+	name := "perdoker_" + strconv.FormatInt(id, 10)
+	tmpHost := "/tmp/perdocker/" + name + "/"
 	tmpGuest := "/tmp/perdocker/"
-	fileGuest := tmpGuest + lang.ExecutableFile()
 
 	c := &container{
 		ID:   id,
@@ -81,13 +76,8 @@ func NewContainer(id int64, lang *Lang) (Container, error) {
 
 		name: name,
 
-		fileHost:  tmpHost + lang.ExecutableFile(),
-		fileGuest: fileGuest,
-
 		tmpHost:  tmpHost,
 		tmpGuest: tmpGuest,
-
-		command: lang.RunCommand(fileGuest),
 	}
 
 	err := os.MkdirAll(c.tmpHost, 0755)
@@ -106,17 +96,29 @@ func (c *container) echoEnd() error {
 	return err
 }
 
-func (c *container) Exec(file []byte) (*Exec, error) {
+func (c *container) Exec(command Command) (*Exec, error) {
+
+	lang := command.Language()
+	if lang == nil {
+		lang = c.Lang
+	}
+	code := []byte(command.Command())
+
 	var err error
 
-	err = ioutil.WriteFile(c.fileHost, file, 0755)
+	fileHost := c.tmpHost + lang.ExecutableFile()
+	fileGuest := c.tmpGuest + lang.ExecutableFile()
+
+	err = ioutil.WriteFile(fileHost, code, 0755)
 	if err != nil {
 		return nil, err
 	}
 
 	in := c.inWriter
 
-	_, err = in.WriteString(c.command + " 3>&- \n")
+	execStr := lang.RunCommand(fileGuest)
+
+	_, err = in.WriteString(execStr + " 3>&- \n")
 	err = c.echoEnd()
 	if err != nil {
 		return nil, err

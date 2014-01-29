@@ -60,9 +60,9 @@ func (w *worker) Start() {
 workerLoop:
 	for {
 
-		var c Command
+		var command Command
 		select {
-		case c = <-w.in:
+		case command = <-w.in:
 		case <-w.exit:
 			break workerLoop
 		}
@@ -71,14 +71,13 @@ workerLoop:
 
 		var err error
 
-		command := []byte(c.Command())
 		exec, err := w.Container.Exec(command)
 
 		err = exec.Wait(w.MaxExecute)
 
 		if err != nil {
 			w.log("Timeout kill. Restarting ...")
-			c.Response(exec.StdOut, exec.StdErr, 137)
+			command.Response(exec.StdOut, exec.StdErr, 137)
 
 			// TODO: kill proccess instead restart container
 			// it's required docker 0.8.0 feature for run command inside exists container.
@@ -87,7 +86,7 @@ workerLoop:
 			continue
 		}
 
-		c.Response(exec.StdOut, exec.StdErr, exec.ExitCode)
+		command.Response(exec.StdOut, exec.StdErr, exec.ExitCode)
 		w.log("Finished ...")
 
 		if w.Container.Clear() != nil {

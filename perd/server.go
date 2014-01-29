@@ -34,13 +34,30 @@ func NewServer(listen string, workers map[string]int64, timeout int64) Server {
 	return &server{&config{listen}, runners}
 }
 
+// NewServer returns new server with universal runner
+func NewUniversalServer(listen string, workers, timeout int64) Server {
+	runner := NewRunner(Universal, workers, timeout)
+	runners := map[string]Runner{
+		"ruby":       runner,
+		"nodejs":     runner,
+		"javascript": runner,
+		"golang":     runner,
+		"python":     runner,
+		"c":          runner,
+		"cpp":        runner,
+		"php":        runner,
+	}
+	return &server{&config{listen}, runners}
+}
+
 type server struct {
 	config  *config
 	runners map[string]Runner
 }
 
 var (
-	ErrUndefinedLang = errors.New("Undefined Language.")
+	ErrUndefinedLang  = errors.New("Undefined Language.")
+	ErrCantFindRunner = errors.New("Can't find runner")
 )
 
 func (s *server) Run() {
@@ -61,7 +78,7 @@ func (s *server) Run() {
 	http.ListenAndServe(s.config.listen, nil)
 }
 
-func (s *server) langHandler(w http.ResponseWriter, r *http.Request, lang string) {
+func (s *server) langHandler(w http.ResponseWriter, r *http.Request, lang *Lang) {
 	body, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
@@ -79,31 +96,31 @@ func (s *server) langHandler(w http.ResponseWriter, r *http.Request, lang string
 }
 
 func (s *server) nodejsHandler(w http.ResponseWriter, r *http.Request) {
-	s.langHandler(w, r, "nodejs")
+	s.langHandler(w, r, Nodejs)
 }
 
 func (s *server) rubyHandler(w http.ResponseWriter, r *http.Request) {
-	s.langHandler(w, r, "ruby")
+	s.langHandler(w, r, Ruby)
 }
 
 func (s *server) golangHandler(w http.ResponseWriter, r *http.Request) {
-	s.langHandler(w, r, "golang")
+	s.langHandler(w, r, Golang)
 }
 
 func (s *server) pythonHandler(w http.ResponseWriter, r *http.Request) {
-	s.langHandler(w, r, "python")
+	s.langHandler(w, r, Python)
 }
 
 func (s *server) cHandler(w http.ResponseWriter, r *http.Request) {
-	s.langHandler(w, r, "c")
+	s.langHandler(w, r, C)
 }
 
 func (s *server) cppHandler(w http.ResponseWriter, r *http.Request) {
-	s.langHandler(w, r, "cpp")
+	s.langHandler(w, r, CPP)
 }
 
 func (s *server) phpHandler(w http.ResponseWriter, r *http.Request) {
-	s.langHandler(w, r, "php")
+	s.langHandler(w, r, PHP)
 }
 
 type RequestJson struct {
@@ -131,7 +148,14 @@ func (s *server) evaluateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err = s.eval(js.Lang, js.Code)
+	lang, ok := Languages[js.Lang]
+
+	if !ok {
+		log.Println(ErrUndefinedLang)
+		return
+	}
+
+	res, err = s.eval(lang, js.Code)
 
 	if err != nil {
 		log.Println(err)
@@ -141,10 +165,10 @@ func (s *server) evaluateHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(res.Bytes())
 }
 
-func (s *server) eval(lang, code string) (Result, error) {
-	runner, ok := s.runners[lang]
+func (s *server) eval(lang *Lang, code string) (Result, error) {
+	runner, ok := s.runners[lang.Name]
 	if !ok {
-		return nil, ErrUndefinedLang
+		return nil, ErrCantFindRunner
 	}
-	return runner.Eval(code), nil
+	return runner.Eval(lang, code), nil
 }
