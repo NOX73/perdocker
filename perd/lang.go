@@ -53,11 +53,12 @@ var PHP = &Lang{"php", "index.php", ".php", "perdocker/php:attach", "php %s"}
 var Universal = &Lang{"universal", "file", "", "perdocker/universal:latest", "cat %s"}
 
 var Languages = map[string]*Lang{
-	"ruby":   Ruby,
-	"nodejs": Nodejs,
-	"golang": Golang,
-	"python": Python,
-	"c":      C,
-	"cpp":    CPP,
-	"php":    PHP,
+	"ruby":       Ruby,
+	"nodejs":     Nodejs,
+	"javascript": Nodejs,
+	"golang":     Golang,
+	"python":     Python,
+	"c":          C,
+	"cpp":        CPP,
+	"php":        PHP,
 }
