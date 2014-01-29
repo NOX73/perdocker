@@ -22,14 +22,13 @@ type config struct {
 func NewServer(listen string, workers map[string]int64, timeout int64) Server {
 	jsRunner := NewRunner(Nodejs, workers["nodejs"], timeout)
 	runners := map[string]Runner{
-		"ruby":       NewRunner(Ruby, workers["ruby"], timeout),
-		"nodejs":     jsRunner,
-		"javascript": jsRunner,
-		"golang":     NewRunner(Golang, workers["golang"], timeout),
-		"python":     NewRunner(Python, workers["python"], timeout),
-		"c":          NewRunner(C, workers["c"], timeout),
-		"cpp":        NewRunner(CPP, workers["cpp"], timeout),
-		"php":        NewRunner(PHP, workers["php"], timeout),
+		"ruby":   NewRunner(Ruby, workers["ruby"], timeout),
+		"nodejs": jsRunner,
+		"golang": NewRunner(Golang, workers["golang"], timeout),
+		"python": NewRunner(Python, workers["python"], timeout),
+		"c":      NewRunner(C, workers["c"], timeout),
+		"cpp":    NewRunner(CPP, workers["cpp"], timeout),
+		"php":    NewRunner(PHP, workers["php"], timeout),
 	}
 	return &server{&config{listen}, runners}
 }
@@ -38,14 +37,13 @@ func NewServer(listen string, workers map[string]int64, timeout int64) Server {
 func NewUniversalServer(listen string, workers, timeout int64) Server {
 	runner := NewRunner(Universal, workers, timeout)
 	runners := map[string]Runner{
-		"ruby":       runner,
-		"nodejs":     runner,
-		"javascript": runner,
-		"golang":     runner,
-		"python":     runner,
-		"c":          runner,
-		"cpp":        runner,
-		"php":        runner,
+		"ruby":   runner,
+		"nodejs": runner,
+		"golang": runner,
+		"python": runner,
+		"c":      runner,
+		"cpp":    runner,
+		"php":    runner,
 	}
 	return &server{&config{listen}, runners}
 }
