@@ -17,10 +17,30 @@ var phpWorkers = flag.Int64("php-workers", 1, "Count of PHP workers.")
 
 var timeout = flag.Int64("timeout", 30, "Max execution time.")
 
+var separate = flag.Bool("separate", false, "Separate workers by languages.")
+var workers = flag.Int64("workers", 1, "Count of workers for non separated workers.")
+
 func main() {
 	flag.Parse()
 
-	workers := map[string]int64{
+	var server perd.Server
+
+	if *separate {
+		server = separatedServer()
+	} else {
+		server = nonSeparatedServer()
+	}
+
+	server.Run()
+}
+
+func nonSeparatedServer() perd.Server {
+	return perd.NewUniversalServer(*httpListen, *workers, *timeout)
+}
+
+func separatedServer() perd.Server {
+
+	workersMap := map[string]int64{
 		"ruby":   *rubyWorkers,
 		"nodejs": *nodejsWorkers,
 		"golang": *golangWorkers,
@@ -30,7 +50,5 @@ func main() {
 		"php":    *phpWorkers,
 	}
 
-	server := perd.NewServer(*httpListen, workers, *timeout)
-
-	server.Run()
+	return perd.NewServer(*httpListen, workersMap, *timeout)
 }
