@@ -16,11 +16,17 @@ Currently supported languages are:
 - javascript (nodejs 0.10.24)
 - golang (1.2)
 - python (2.7.3)
-- C
-- C++
+- C (gcc 4.6.3)
+- C++ (g++ 4.6.3)
 - PHP (5.3.10)
 
 ## API
+
+- `POST /api/evaluate/< language_name >` with file in body.
+- `POST /api/evaluate/` with JSON in body. JSON should content
+  `language` field & `code` field.
+
+### Curl examples
 
 ```bash
 curl -POST -d "[1,2,3].each do |a| puts a*a; end;" 'http://localhost:8080/api/evaluate/ruby'
@@ -48,11 +54,17 @@ std::cout << \"Hello\"; return 0;
 "
 {"stdout":"Hello\n","stderr":"","meta":"","exitCode":0}
 ```
-
 ## Install
 
 ```bash
 make install
+```
+
+Instead of `make install` that just download universal image from docker
+images repository, you can build image locally:
+
+```bash
+make build-image
 ```
 
 ## Run
@@ -76,7 +88,7 @@ make run
 ## Flags
 
 ```bash
-$ ./bin/perdocker -h
+./bin/perdocker -h
 Usage of ./bin/perdocker:
   -c-workers=1: Count of C workers.
   -cpp-workers=1: Count of C++ workers.
@@ -86,16 +98,19 @@ Usage of ./bin/perdocker:
   -php-workers=1: Count of PHP workers.
   -python-workers=1: Count of python workers.
   -ruby-workers=1: Count of ruby workers.
+  -separate=false: Separate workers by languages.
   -timeout=30: Max execution time.
+  -workers=1: Count of workers for non separated workers.
 ```
 
 ## Defaults
 
-- listen :8080
-- 1 worker per longuage.
-- timeout 30 seconds
+- listen :8080.
+- non separate mode.
+- 1 worker per longuage or 1 worker in non separate mode.
+- timeout 30 seconds.
 
-## Coming soon
+## TODO
 
 - run process inside exist docker container. Required docker 0.8.0.
 - fork detector.
