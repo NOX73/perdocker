@@ -50,7 +50,7 @@ var CPP = &Lang{"cpp", "a.cpp", ".cpp", "perdocker/c:attach", "g++ -o /tmp/a %s 
 var PHP = &Lang{"php", "index.php", ".php", "perdocker/php:attach", "php %s"}
 
 // Universal languages container 
-var Universal = &Lang{Image: "perdocker/universal:latest"}
+var Universal = &Lang{"universal", "file", "", "perdocker/universal:latest", "cat %s"}
 
 var Languages = map[string]*Lang{
 	"ruby":   Ruby,
