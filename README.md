@@ -107,7 +107,7 @@ Usage of ./bin/perdocker:
 
 - listen :8080.
 - non separate mode.
-- 1 worker per longuage or 1 worker in non separate mode.
+- 1 worker per language or 1 worker in non separate mode.
 - timeout 30 seconds.
 
 ## TODO
