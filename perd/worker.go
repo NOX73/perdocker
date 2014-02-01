@@ -56,6 +56,8 @@ func (w *worker) Start() {
 workerLoop:
 	for {
 
+		w.log("Waiting job ...")
+
 		var command Command
 		select {
 		case command = <-w.in:

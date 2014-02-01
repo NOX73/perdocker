@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"os"
 	"os/exec"
 )
 
@@ -29,16 +30,6 @@ type backend struct{}
 func (b *backend) Start(name, image, shared, mem, cpu string) (inCh, outCh, errCh chan []byte, err error) {
 	cmd := exec.Command("docker", "run", "-m", mem, "-c", cpu, "-i", "-v", shared, "-name="+name, image, "/bin/bash", "-l")
 
-	err = cmd.Start()
-	if err != nil {
-		return
-	}
-
-	err = b.waitStart(name)
-	if err != nil {
-		return
-	}
-
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return
@@ -49,6 +40,22 @@ func (b *backend) Start(name, image, shared, mem, cpu string) (inCh, outCh, errC
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
+		return
+	}
+
+	err = cmd.Start()
+	if err != nil {
+		return
+	}
+
+	err = b.waitStart(name)
+	if err != nil {
+		io.Copy(os.Stdout, stderr)
+
+		stderr.Close()
+		stdout.Close()
+		stdin.Close()
+
 		return
 	}
 
