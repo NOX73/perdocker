@@ -80,9 +80,13 @@ func NewContainer(id int64, lang *Lang) (Container, error) {
 }
 
 func (c *container) Init() error {
+	return c.Restart()
+}
+
+func (c *container) Start() error {
 	var err error
 
-	err = c.Restart()
+	c.inCh, c.outCh, c.errCh, err = Backend.Start(c.name, c.Lang.Image, c.sharedPaths(), MemLimit, CPULimit)
 	if err != nil {
 		return err
 	}
@@ -91,13 +95,6 @@ func (c *container) Init() error {
 	if err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func (c *container) Start() error {
-	var err error
-	c.inCh, c.outCh, c.errCh, err = Backend.Start(c.name, c.Lang.Image, c.sharedPaths(), MemLimit, CPULimit)
 
 	return err
 }
