@@ -1,9 +1,7 @@
 package perd
 
 import (
-	"bufio"
 	"errors"
-	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -15,12 +13,14 @@ import (
 // Container represents Docker container.
 type Container interface {
 	Init() error
-	Clear() error
+
 	Start() error
 	Stop()
 	Restart() error
+
 	Exec(Command) (*Exec, error)
-	Remove()
+
+	Clear() error
 }
 
 const (
@@ -32,9 +32,7 @@ const (
 )
 
 var (
-	// ErrCantStart indicates fail in starting particular container (detailed error
-	// will be printed to the stdout.
-	ErrCantStart = errors.New("can't start container")
+	ErrSendCommandTimeout = errors.New("Sendcommand to container timeout.")
 )
 
 type container struct {
@@ -50,17 +48,9 @@ type container struct {
 	tmpHost  string
 	tmpGuest string
 
-	stdin  io.WriteCloser
-	stdout io.ReadCloser
-	stderr io.ReadCloser
-
-	inWriter  *bufio.Writer
-	outReader *bufio.Reader
-	errReader *bufio.Reader
-
-	inCh  chan []byte
-	outCh chan []byte
-	errCh chan []byte
+	inCh  chan<- []byte
+	outCh <-chan []byte
+	errCh <-chan []byte
 }
 
 // NewContainer returns new Container
@@ -88,12 +78,37 @@ func NewContainer(id int64, lang *Lang) (Container, error) {
 	return c, nil
 }
 
-func (c *container) echoEnd() error {
+func (c *container) Init() error {
 	var err error
-	_, err = c.inWriter.WriteString("echo \"\n" + string(c.end) + "$?\"\n")
-	_, err = c.inWriter.WriteString("echo " + string(c.end) + " 1>&2\n")
-	c.inWriter.Flush()
+
+	err = c.Restart()
+	if err != nil {
+		return err
+	}
+
+	err = c.Clear()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *container) Start() error {
+	var err error
+	c.inCh, c.outCh, c.errCh, err = Backend.Start(c.name, c.Lang.Image, c.sharedPaths(), MemLimit, CPULimit)
+
 	return err
+}
+
+func (c *container) Stop() {
+	Backend.Stop(c.name)
+	close(c.inCh)
+}
+
+func (c *container) Restart() error {
+	c.Stop()
+	return c.Start()
 }
 
 func (c *container) Exec(command Command) (*Exec, error) {
@@ -114,11 +129,15 @@ func (c *container) Exec(command Command) (*Exec, error) {
 		return nil, err
 	}
 
-	in := c.inWriter
+	in := c.inCh
 
 	execStr := lang.RunCommand(fileGuest)
 
-	_, err = in.WriteString(execStr + " 3>&- \n")
+	err = c.sendCommand(execStr + " 3>&- ")
+	if err != nil {
+		return nil, err
+	}
+
 	err = c.echoEnd()
 	if err != nil {
 		return nil, err
@@ -128,88 +147,13 @@ func (c *container) Exec(command Command) (*Exec, error) {
 
 	return exec, nil
 }
-
-func (c *container) Start() error {
-	var err error
-
-	cmd := exec.Command("docker", "run", "-m", MemLimit, "-c", CPULimit, "-i", "-v", c.sharedPaths(), "-name="+c.name, c.Lang.Image, "/bin/bash", "-l")
-	c.cmd = cmd
-
-	c.stdin, _ = cmd.StdinPipe()
-	c.stdout, _ = cmd.StdoutPipe()
-	c.stderr, _ = cmd.StderrPipe()
-
-	err = cmd.Start()
-	if err != nil {
-		return err
-	}
-
-	err = c.waitStart()
-	if err != nil {
-		c.rm()
-		return err
-	}
-
-	c.inWriter = bufio.NewWriter(c.stdin)
-	c.outReader = bufio.NewReader(c.stdout)
-	c.errReader = bufio.NewReader(c.stderr)
-
-	c.inCh = make(chan []byte, 5)
-	c.outCh = make(chan []byte, 5)
-	c.errCh = make(chan []byte, 5)
-
-	go readLinesToChannel(c.outReader, c.outCh)
-	go readLinesToChannel(c.errReader, c.errCh)
-
-	return nil
-}
-
-func (c *container) Stop() {
-	c.stdin.Close()
-	c.stdout.Close()
-	c.stderr.Close()
-
-	close(c.inCh)
-	close(c.outCh)
-	close(c.errCh)
-
-	c.Remove()
-}
-
-func (c *container) Restart() error {
-	c.Stop()
-	return c.Start()
-}
-
-func (c *container) Init() error {
-	var err error
-	c.Remove()
-
-	err = c.Start()
-	if err != nil {
-		return err
-	}
-
-	err = c.Clear()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *container) Remove() {
-	for c.isExist() {
-		c.kill()
-		c.rm()
-	}
-}
-
 func (c *container) Clear() error {
 	c.end = generateEnd()
 	//TODO: Fork detector
 	return c.clearStd()
 }
+
+// Private
 
 func (c *container) clearStd() error {
 	err := c.echoEnd()
@@ -221,37 +165,29 @@ func (c *container) clearStd() error {
 	return exec.Wait(5 * time.Second)
 }
 
-func (c *container) rm() error {
-	return exec.Command("docker", "rm", c.name).Run()
-}
-
-func (c *container) kill() error {
-	return exec.Command("docker", "kill", c.name).Run()
-}
-
-func (c *container) isExist() bool {
-	err := exec.Command("docker", "inspect", c.name).Run()
-	return err == nil
-}
-
-func (c *container) waitStart() error {
-	for i := 0; i < 5; i++ {
-		if c.isExist() {
-			return nil
-		}
+func (c *container) sendCommand(command string) error {
+	select {
+	case c.inCh <- []byte(command):
+	case <-time.After(5 * time.Second):
+		return ErrSendCommandTimeout
 	}
-	return ErrCantStart
+	return nil
 }
 
-func readLinesToChannel(r *bufio.Reader, ch chan []byte) {
-	defer func() { recover() }()
-	for {
-		line, err := r.ReadBytes(eol)
-		if err != nil {
-			break
-		}
-		ch <- line
+func (c *container) echoEnd() error {
+	var err error
+
+	err = c.sendCommand("echo \"\n" + string(c.end) + "$?\"")
+	if err != nil {
+		return err
 	}
+
+	err = c.sendCommand("echo " + string(c.end) + " 1>&2")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 var endChars []byte = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz0123456789")

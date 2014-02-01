@@ -5,10 +5,6 @@ import (
 	"time"
 )
 
-const (
-	eol byte = 10
-)
-
 // Worker is the process who listens for commands to run and executes them inside the container.
 // Note that each worker must create their own container.
 type Worker interface {
