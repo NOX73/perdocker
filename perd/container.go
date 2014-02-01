@@ -3,6 +3,7 @@ package perd
 import (
 	"errors"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -102,8 +103,15 @@ func (c *container) Start() error {
 }
 
 func (c *container) Stop() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Panic on container stop with reason:", r)
+		}
+	}()
 	Backend.Stop(c.name)
-	close(c.inCh)
+	if c.inCh != nil {
+		close(c.inCh)
+	}
 }
 
 func (c *container) Restart() error {
