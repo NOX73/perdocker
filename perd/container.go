@@ -152,7 +152,18 @@ func (c *container) Exec(command Command) (*Exec, error) {
 }
 func (c *container) Clear() error {
 	c.end = generateEnd()
-	//TODO: Fork detector
+
+	forks, err := Backend.DetectForks(c.name)
+	if err != nil {
+		return err
+	}
+	if forks { // restarting container if some forks were found
+		err = c.Restart()
+		if err != nil {
+			return err
+		}
+	}
+
 	return c.clearStd()
 }
 

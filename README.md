@@ -113,5 +113,4 @@ Usage of ./bin/perdocker:
 ## TODO
 
 - run process inside exist docker container. Required docker 0.8.0.
-- fork detector.
 - restart container after some amount evals.

@@ -2,11 +2,13 @@ package perd
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"io"
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 )
 
 const (
@@ -23,6 +25,7 @@ var Backend BackendI = new(backend)
 type BackendI interface {
 	Start(name, image, shared, mem, cpu string) (inCh, outCh, errCh chan []byte, err error)
 	Stop(name string)
+	DetectForks(name string) (found bool, err error)
 }
 
 type backend struct{}
@@ -73,6 +76,36 @@ func (b *backend) Stop(name string) {
 		b.kill(name)
 		b.rm(name)
 	}
+}
+
+// DetectForks returns true if number of processes greater than 1
+// This may be a result of the fork bomb.
+func (c *backend) DetectForks(name string) (found bool, err error) {
+	c1 := exec.Command("docker", "top", name)
+	c2 := exec.Command("wc", "-l")
+
+	r, w := io.Pipe()
+	c1.Stdout = w
+	c2.Stdin = r
+
+	var b2 bytes.Buffer
+	c2.Stdout = &b2
+
+	c1.Start()
+	c2.Start()
+	c1.Wait()
+	w.Close()
+	c2.Wait()
+
+	nprocStr := b2.String()
+	var nproc int
+	nproc, err = strconv.Atoi(nprocStr[:len(nprocStr)-1])
+	if err != nil {
+		return false, err
+	}
+
+	found = (nproc - 1) > 1
+	return found, nil
 }
 
 func (b *backend) waitStart(name string) error {
