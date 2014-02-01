@@ -49,6 +49,11 @@ func NewRunner(lang *Lang, workers int64, timeout int64) Runner {
 }
 
 func (r *runner) Start() {
+
+	for i := 0; i < minWorkersCount; i++ {
+		r.RunWorker()
+	}
+
 	for {
 
 		var killTimer <-chan time.Time
