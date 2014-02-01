@@ -129,8 +129,6 @@ func (c *container) Exec(command Command) (*Exec, error) {
 		return nil, err
 	}
 
-	in := c.inCh
-
 	execStr := lang.RunCommand(fileGuest)
 
 	err = c.sendCommand(execStr + " 3>&- ")
