@@ -111,6 +111,10 @@ func copyStreams(in io.WriteCloser, out, err io.ReadCloser, inCh, outCh, errCh c
 
 	writeLinesFromChannel(in, inCh)
 
+	in.Close()
+	out.Close()
+	err.Close()
+
 	close(outCh)
 	close(errCh)
 
