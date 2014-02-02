@@ -57,7 +57,7 @@ type container struct {
 // NewContainer returns new Container
 func NewContainer(id int64, lang *Lang) (Container, error) {
 
-	name := "perdoker_" + strconv.FormatInt(id, 10)
+	name := "perdocker_" + strconv.FormatInt(id, 10)
 	tmpHost := "/tmp/perdocker/" + name + "/"
 	tmpGuest := "/tmp/perdocker/"
 
