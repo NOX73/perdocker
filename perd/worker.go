@@ -71,6 +71,11 @@ workerLoop:
 
 		exec, err := w.Container.Exec(command)
 
+		if err != nil {
+			w.log("Can't exec with reason: ", err)
+			continue
+		}
+
 		err = exec.Wait(w.MaxExecute)
 
 		if err != nil {
