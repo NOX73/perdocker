@@ -25,7 +25,7 @@ var Backend BackendI = new(backend)
 type BackendI interface {
 	Start(name, image, shared, mem, cpu string) (inCh, outCh, errCh chan []byte, err error)
 	Stop(name string)
-	DetectForks(name string) (found bool, err error)
+	Nproc(name string) (int, error)
 }
 
 type backend struct{}
@@ -78,9 +78,9 @@ func (b *backend) Stop(name string) {
 	}
 }
 
-// DetectForks returns true if number of processes greater than 1
-// This may be a result of the fork bomb.
-func (c *backend) DetectForks(name string) (found bool, err error) {
+// Nproc returns number of currently running processes.
+// Or -1 in case of error(s).
+func (c *backend) Nproc(name string) (int, error) {
 	c1 := exec.Command("docker", "top", name)
 	c2 := exec.Command("wc", "-l")
 
@@ -98,14 +98,10 @@ func (c *backend) DetectForks(name string) (found bool, err error) {
 	c2.Wait()
 
 	nprocStr := b2.String()
-	var nproc int
-	nproc, err = strconv.Atoi(nprocStr[:len(nprocStr)-1])
-	if err != nil {
-		return false, err
-	}
+	nproc, err := strconv.Atoi(nprocStr[:len(nprocStr)-1])
 
-	found = (nproc - 1) > 1
-	return found, nil
+	// first row - headers
+	return (nproc - 1), err
 }
 
 func (b *backend) waitStart(name string) error {

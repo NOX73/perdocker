@@ -153,7 +153,7 @@ func (c *container) Exec(command Command) (*Exec, error) {
 func (c *container) Clear() error {
 	c.end = generateEnd()
 
-	forks, err := Backend.DetectForks(c.name)
+	forks, err := c.detectForks()
 	if err != nil {
 		return err
 	}
@@ -168,6 +168,14 @@ func (c *container) Clear() error {
 }
 
 // Private
+
+// DetectForks returns true if number of processes greater than 1
+// This may be a result of the fork bomb.
+func (c *container) detectForks() (found bool, err error) {
+	var nproc int
+	nproc, err = Backend.Nproc(c.name)
+	return nproc > 1, err
+}
 
 func (c *container) clearStd() error {
 	err := c.echoEnd()
