@@ -49,13 +49,15 @@ type container struct {
 	tmpHost  string
 	tmpGuest string
 
+	maxProcessCount int64
+
 	inCh  chan<- []byte
 	outCh <-chan []byte
 	errCh <-chan []byte
 }
 
 // NewContainer returns new Container
-func NewContainer(id int64, lang *Lang) (Container, error) {
+func NewContainer(id, maxProcessCount int64, lang *Lang) (Container, error) {
 
 	name := "perdocker_" + strconv.FormatInt(id, 10)
 	tmpHost := "/tmp/perdocker/" + name + "/"
@@ -69,6 +71,8 @@ func NewContainer(id int64, lang *Lang) (Container, error) {
 
 		tmpHost:  tmpHost,
 		tmpGuest: tmpGuest,
+
+		maxProcessCount: maxProcessCount,
 	}
 
 	err := os.MkdirAll(c.tmpHost, 0755)
@@ -87,6 +91,8 @@ func (c *container) Start() error {
 	var err error
 
 	c.inCh, c.outCh, c.errCh, err = Backend.Start(c.name, c.Lang.Image, c.sharedPaths(), MemLimit, CPULimit)
+	c.limitProcessCount()
+
 	if err != nil {
 		return err
 	}
@@ -228,4 +234,9 @@ func generateEnd() []byte {
 
 func (c *container) sharedPaths() string {
 	return c.tmpHost + ":" + c.tmpGuest + ":ro"
+}
+
+func (c *container) limitProcessCount() {
+	stringMaxProcessCount := strconv.FormatInt(c.maxProcessCount, 10)
+	c.sendCommand("ulimit -u " + stringMaxProcessCount)
 }

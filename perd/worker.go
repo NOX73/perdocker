@@ -23,9 +23,9 @@ type worker struct {
 }
 
 // NewWorker returns new Worker
-func NewWorker(lang *Lang, id, timeout int64, in chan Command, exit chan bool) (Worker, error) {
+func NewWorker(lang *Lang, id, timeout int64, in chan Command, exit chan bool, maxProcessCount int64) (Worker, error) {
 
-	container, err := NewContainer(id, lang)
+	container, err := NewContainer(id, maxProcessCount, lang)
 	if err != nil {
 		return nil, err
 	}
