@@ -9,6 +9,8 @@ const (
 	killTimeout      = 5 * time.Second
 	minWorkersCount  = 1
 	newWorkerTimeout = 1 * time.Second
+	//Empirically chosen number in which there are no problems during normal operation
+	systemDefaultProcessCount = 26
 )
 
 // Runner run several workers
@@ -23,6 +25,8 @@ type runner struct {
 	evalWorker chan Command
 	newEval    chan Command
 	killWorker chan bool
+
+	maxProcessCount int64
 
 	workersCount    int64
 	maxWorkersCount int64
@@ -41,6 +45,7 @@ func NewRunner(lang *Lang, workers int64, timeout int64) Runner {
 		newEval:    make(chan Command),
 		killWorker: make(chan bool, 1),
 
+		maxProcessCount: workers * systemDefaultProcessCount,
 		maxWorkersCount: workers,
 		Timeout:         timeout,
 	}
@@ -111,5 +116,5 @@ func (r *runner) RunWorker() {
 
 	r.workersCount++
 
-	NewWorker(r.Lang, wid, r.Timeout, r.evalWorker, r.killWorker)
+	NewWorker(r.Lang, wid, r.Timeout, r.evalWorker, r.killWorker, r.maxProcessCount)
 }
