@@ -8,7 +8,7 @@ import (
 const (
 	killTimeout      = 5 * time.Second
 	minWorkersCount  = 1
-	newWorkerTimeout = 1 * time.Second
+	newWorkerTimeout = 50 * time.Millisecond
 	//Empirically chosen number in which there are no problems during normal operation
 	systemDefaultProcessCount = 26
 )
