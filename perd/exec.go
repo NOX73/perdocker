@@ -68,6 +68,7 @@ func (e *Exec) Start() {
 			if e.isEnd(line) {
 				e.out = nil
 				e.ExitCode = e.extractCode(line)
+				e.StdOut = cutLast(e.StdOut)
 			} else {
 				e.StdOut = append(e.StdOut, line...)
 			}
@@ -80,6 +81,7 @@ func (e *Exec) Start() {
 
 			if e.isEnd(line) {
 				e.err = nil
+				e.StdErr = cutLast(e.StdErr)
 			} else {
 				e.StdErr = append(e.StdErr, line...)
 			}
@@ -105,4 +107,12 @@ func (e *Exec) isEnd(line []byte) bool {
 
 func (e *Exec) isFinish() bool {
 	return e.out == nil && e.err == nil
+}
+
+func cutLast(sl []byte) []byte {
+	size := len(sl)
+	if size > 0 {
+		return sl[:size-1]
+	}
+	return sl
 }
